@@ -6,6 +6,7 @@ interface Props {
 const { variant = "standard", class: extraClass = "" } = Astro.props;
 const variantClasses = {
   standard: "w-[97%] mx-auto",
+  prose: "w-[97%] mx-auto max-w-prose",
 };
 const classes = `${variantClasses[variant]} ${extraClass}`.trim();
 ---

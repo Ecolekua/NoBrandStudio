@@ -28,16 +28,18 @@ import OverlayMenu from "./OverlayMenu.astro";
 
 <OverlayMenu />
 
+<script is:inline src="/ScrambleTextPlugin.min.js"></script>
+
 <script>
   import gsap from "gsap";
-  import { ScrambleTextPlugin } from "@/lib/ScrambleTextPlugin.min.js";
 
-  gsap.registerPlugin(ScrambleTextPlugin);
+  gsap.registerPlugin((window as any).ScrambleTextPlugin);
 
   const logoLink = document.getElementById("logo-link") as HTMLElement;
   gsap.set(logoLink, { opacity: 0 });
 
   const runScramble = () => {
+    gsap.registerPlugin((window as any).ScrambleTextPlugin);
     logoLink.textContent = "";
     gsap.set(logoLink, { opacity: 1 });
     gsap.to(logoLink, {
