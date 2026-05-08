@@ -72,6 +72,7 @@
     },
     onReverseComplete: () => {
       // Cortina subió → reset y navega si hay destino
+      document.body.style.overflow = "";
       resetWords();
       isAnimating = false;
       if (pendingDest) {
@@ -117,6 +118,7 @@
 
     if (!isOpen) {
       // Abrir: ocultar contenido de página + bajar cortina → animateWordsIn
+      document.body.style.overflow = "hidden";
       overlayMenu.style.pointerEvents = "auto";
       toggle.classList.add("is-open");
       if (navLinks) gsap.to(navLinks, { opacity: 0, duration: 0.25 });
