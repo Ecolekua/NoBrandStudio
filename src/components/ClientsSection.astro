@@ -59,6 +59,13 @@ const clients = [
 
   const clientsPreview = document.getElementById("clients-preview") as HTMLElement;
   const clientNames = document.querySelectorAll<HTMLElement>(".client-name");
+  const isTouch = window.matchMedia("(pointer: coarse)").matches;
+
+  if (isTouch) {
+    clientNames.forEach((client) => {
+      client.addEventListener("click", (e) => e.preventDefault());
+    });
+  }
 
   let activeClientIndex = -1;
 
