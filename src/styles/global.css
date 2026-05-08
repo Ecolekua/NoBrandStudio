@@ -15,6 +15,10 @@
   --font-sans: "DM Sans", sans-serif;   /* fuente principal de ambas páginas  */
   --font-mono: "DM Mono", monospace;    /* UI del homepage (nav, footer, listas) */
 
+
+  --color-sand: #ebe9e5;
+
+
   /* ── Acento (verde-teal OKLCH) ───────────────────────────── */
   --color-accent-50:  oklch(0.982 0.029 125.9);
   --color-accent-100: oklch(0.961 0.065 127.2);
