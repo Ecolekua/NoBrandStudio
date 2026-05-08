@@ -1,0 +1,53 @@
+---
+---
+
+<script>
+  import gsap from "gsap";
+  import ScrollTrigger from "gsap/ScrollTrigger";
+
+  gsap.registerPlugin(ScrollTrigger);
+
+  // ── Imágenes — desliza desde abajo con fade ───────────────────────
+  document.querySelectorAll<HTMLElement>('[data-animate="img"]').forEach((img) => {
+    gsap.fromTo(
+      img,
+      { yPercent: 12, autoAlpha: 0 },
+      {
+        yPercent: 0,
+        autoAlpha: 1,
+        duration: 0.8,
+        ease: "power3.out",
+        scrollTrigger: {
+          trigger: img,
+          start: "top 88%",
+        },
+      }
+    );
+  });
+
+  // ── Bloques de texto — fade up sutil ─────────────────────────────
+  document.querySelectorAll<HTMLElement>('[data-animate="block"]').forEach((block) => {
+    gsap.fromTo(
+      block,
+      { y: 24, autoAlpha: 0 },
+      {
+        y: 0,
+        autoAlpha: 1,
+        duration: 0.7,
+        ease: "power3.out",
+        scrollTrigger: {
+          trigger: block,
+          start: "top 88%",
+        },
+      }
+    );
+  });
+</script>
+
+<style>
+  /* Oculta antes del primer paint — evita flash */
+  :global([data-animate="img"]),
+  :global([data-animate="block"]) {
+    opacity: 0;
+  }
+</style>

@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cd /mnt)",
+      "Bash(ls -lh \"c:/Users/Eco/Desktop/NoBrandStudio/public/\")"
+    ]
+  }
+}

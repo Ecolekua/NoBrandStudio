@@ -1,0 +1,104 @@
+---
+import OverlayMenu from "./OverlayMenu.astro";
+---
+
+<nav class="fixed top-0 w-full mix-blend-difference z-[11]">
+  <div class="grid grid-cols-3 lg:grid-cols-4 items-start px-8 py-4">
+
+    <div class="flex items-center">
+      <a id="logo-link" href="/">No Brand Studio.</a>
+      <span class="typing-indicator">█</span>
+    </div>
+
+    <p data-split="words" class="hidden lg:block">Santiago, chile<br />Creative Technologist</p>
+    <div id="nav-links" class="hidden lg:flex gap-6 items-center">
+
+      <a data-split="words" href="/">Home</a>
+      <a data-split="words" href="/studio">Studio</a>
+      <a data-split="words" href="/lab">Projects</a>
+      <a data-split="words" href="#">About Us</a>
+    </div>
+
+    <button data-split="words" id="menu-toggle" class="ml-auto lg:hidden">
+      <span class="toggle-label">Download</span>
+    </button>
+
+  </div>
+</nav>
+
+<OverlayMenu />
+
+<script>
+  import gsap from "gsap";
+  import { ScrambleTextPlugin } from "@/lib/ScrambleTextPlugin.min.js";
+
+  gsap.registerPlugin(ScrambleTextPlugin);
+
+  const logoLink = document.getElementById("logo-link") as HTMLElement;
+  gsap.set(logoLink, { opacity: 0 });
+
+  const runScramble = () => {
+    logoLink.textContent = "";
+    gsap.set(logoLink, { opacity: 1 });
+    gsap.to(logoLink, {
+      duration: 2,
+      scrambleText: {
+        text: "No Brand Studio.",
+        chars: "lowerCase",
+        speed: 0.4,
+        tweenLength: false,
+      },
+      ease: "none",
+    });
+  };
+
+  if (sessionStorage.getItem("__preloaderDone")) {
+    gsap.delayedCall(0.15, runScramble);
+  } else {
+    window.addEventListener("preloaderDone", () => gsap.delayedCall(0.2, runScramble), { once: true });
+  }
+</script>
+
+<style>
+  button {
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+  }
+
+  a, p, .typing-indicator {
+    color: white;
+    text-decoration: none;
+    text-transform: uppercase;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    font-weight: 550;
+    line-height: 1;
+    display: inline-block;
+  }
+
+  button span {
+    color: white;
+    text-transform: uppercase;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    font-weight: 550;
+    line-height: 1;
+  }
+
+  p {
+    display: block;
+    line-height: 1.4;
+  }
+
+  .typing-indicator {
+    display: inline-block;
+    animation: blink-cursor 0.7s step-end infinite;
+  }
+
+  @keyframes blink-cursor {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0; }
+  }
+</style>

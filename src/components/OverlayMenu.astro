@@ -1,0 +1,264 @@
+---
+---
+
+<div class="overlay-menu" id="overlay-menu">
+  <div class="overlay-bg"></div>
+  <div class="overlay-bg"></div>
+  <div class="overlay-bg"></div>
+  <div class="overlay-bg"></div>
+
+  <div class="overlay-items">
+    <div class="overlay-col">
+      <div data-split="words" class="overlay-info">
+        <p>Santiago, Chile</p>
+        <p>Creative Technologist</p>
+      </div>
+      <div class="overlay-secondary">
+        <a data-split="words" href="/studio#work">Work</a>
+        <a data-split="words" href="/studio#projects">Projects</a>
+        <a data-split="words" href="/studio#education">Education</a>
+        <a data-split="words" href="/studio#speaking">Speaking</a>
+      </div>
+    </div>
+    <div class="overlay-col">
+      <div class="overlay-primary">
+        <a data-split="words" href="/">Home</a>
+        <a data-split="words" href="/studio">Studio</a>
+        <a data-split="words" href="#">Projects</a>
+        <a data-split="words" href="#">About</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  import gsap from "gsap";
+  import { SplitText } from "gsap/SplitText";
+
+  gsap.registerPlugin(SplitText);
+
+  const toggle = document.getElementById("menu-toggle") as HTMLElement;
+  const overlayMenu = document.getElementById("overlay-menu") as HTMLElement;
+  const navLinks = document.getElementById("nav-links") as HTMLElement | null;
+  const bgs = overlayMenu.querySelectorAll<HTMLElement>(".overlay-bg");
+
+  let isOpen = false;
+  let isAnimating = false;
+  let words: Element[] = [];
+  let pendingDest = "";
+
+  // ── Helpers (disponibles antes de que fonts carguen) ─────────────────────────
+  let animateWordsIn = () => {};
+  let resetWords = () => { gsap.set(words, { yPercent: 105 }); };
+
+  const animateWordsOut = (onDone: () => void) => {
+    if (words.length === 0) { onDone(); return; }
+    gsap.killTweensOf(words);
+    gsap.to(words, {
+      yPercent: -110,
+      stagger: { amount: 0.25 },
+      duration: 0.35,
+      ease: "power3.in",
+      onComplete: onDone,
+    });
+  };
+
+  // ── Timeline: cortina negra ──────────────────────────────────────────────────
+  const tl = gsap.timeline({
+    paused: true,
+    onComplete: () => {
+      // Cortina bajó → ahora aparecen los textos
+      animateWordsIn();
+    },
+    onReverseComplete: () => {
+      // Cortina subió → reset y navega si hay destino
+      resetWords();
+      isAnimating = false;
+      if (pendingDest) {
+        window.location.href = pendingDest;
+        pendingDest = "";
+      }
+    },
+  });
+
+  tl.to(bgs, { scaleY: 1, duration: 0.6, stagger: 0.08, ease: "power3.inOut" });
+  tl.to(
+    ".overlay-items",
+    { clipPath: "polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)", duration: 0.5, ease: "power3.inOut" },
+    "-=0.3"
+  );
+
+  // ── SplitText (espera fuentes) ───────────────────────────────────────────────
+  document.fonts.ready.then(() => {
+    overlayMenu.querySelectorAll<HTMLElement>("[data-split]").forEach((el) => {
+      const split = new SplitText(el, { type: "words", mask: "words", wordsClass: "word" });
+      words.push(...split.words);
+    });
+
+    gsap.set(words, { yPercent: 105 });
+
+    animateWordsIn = () => {
+      gsap.to(words, {
+        yPercent: 0,
+        stagger: { amount: 0.5 },
+        duration: 0.75,
+        ease: "expo.out",
+        onComplete: () => { isAnimating = false; },
+      });
+    };
+  });
+
+  // ── Toggle (Download / Close) ────────────────────────────────────────────────
+  toggle.addEventListener("click", () => {
+    if (isAnimating) return;
+    isAnimating = true;
+    const label = toggle.querySelector(".toggle-label") as HTMLElement;
+
+    const pageContent = document.querySelectorAll<HTMLElement>("main, section, footer");
+
+    if (!isOpen) {
+      // Abrir: ocultar contenido de página + bajar cortina → animateWordsIn
+      overlayMenu.style.pointerEvents = "auto";
+      if (label) label.textContent = "Close";
+      if (navLinks) gsap.to(navLinks, { opacity: 0, duration: 0.25 });
+      gsap.to(pageContent, { opacity: 0, duration: 0.25, delay: 0.4 });
+      tl.play();
+      isOpen = true;
+    } else {
+      // Cerrar: textos salen → cortina sube → restaurar página
+      pendingDest = "";
+      if (label) label.textContent = "Download";
+      if (navLinks) gsap.to(navLinks, { opacity: 1, duration: 0.25 });
+      animateWordsOut(() => {
+        tl.reverse();
+        gsap.to(pageContent, { opacity: 1, duration: 0.4, delay: 0.3 });
+      });
+      isOpen = false;
+    }
+  });
+
+  // ── Links del overlay: textos salen → ocultar página → cortina sube → navega ─
+  overlayMenu.querySelectorAll<HTMLAnchorElement>("a[href]").forEach((link) => {
+    const href = link.getAttribute("href") ?? "";
+    if (!href || href.startsWith("#")) return;
+
+    link.addEventListener("click", (e) => {
+      e.preventDefault();
+      if (!isOpen) return;
+
+      pendingDest = link.href;
+      isOpen = false;
+      overlayMenu.style.pointerEvents = "none";
+
+      const label = toggle.querySelector(".toggle-label") as HTMLElement;
+      if (label) label.textContent = "Download";
+      if (navLinks) gsap.set(navLinks, { opacity: 0 });
+
+      // Ocultar contenido de la página actual para que no sea visible
+      // cuando la cortina suba antes de que cargue la nueva página
+      gsap.set(document.querySelectorAll<HTMLElement>("main, section, footer"), { opacity: 0 });
+
+      const showreelTrigger = document.querySelector<HTMLElement>("#showreel-trigger");
+      if (showreelTrigger) gsap.to(showreelTrigger, { opacity: 0, y: 14, duration: 0.3, ease: "power2.in" });
+
+      animateWordsOut(() => tl.reverse());
+    });
+  });
+</script>
+
+<style>
+  .overlay-menu {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100svh;
+    pointer-events: none;
+    z-index: 10;
+  }
+
+  .overlay-bg {
+    position: absolute;
+    inset: 0;
+    transform: scaleY(0);
+    transform-origin: top;
+    will-change: transform;
+    pointer-events: none;
+  }
+
+  .overlay-bg:nth-child(1) { background-color: #1a1a1a; }
+  .overlay-bg:nth-child(2) { background-color: #111; }
+  .overlay-bg:nth-child(3) { background-color: #0d0d0d; }
+  .overlay-bg:nth-child(4) { background-color: #000; }
+
+  .overlay-items {
+    display: flex;
+    gap: 2rem;
+    padding: 8rem;
+    height: 100%;
+    background-color: #000;
+    clip-path: polygon(0% 0%, 100% 0%, 100% 0%, 0% 0%);
+    will-change: clip-path;
+  }
+
+  .overlay-col:nth-child(1) {
+    flex: 2;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+
+  .overlay-col:nth-child(2) {
+    flex: 4;
+    display: flex;
+    justify-content: flex-end;
+    align-items: flex-end;
+  }
+
+  .overlay-info p {
+    color: #444;
+    font-size: 0.75rem;
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    line-height: 1.6;
+    display: block;
+  }
+
+  .overlay-items a {
+    text-decoration: none;
+    color: #fff;
+    display: block;
+    line-height: 1.1;
+    margin-bottom: 0.4rem;
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    text-transform: uppercase;
+  }
+
+  .overlay-primary a {
+    font-family: var(--font-sans);
+    font-size: 5rem;
+    font-weight: 500;
+    letter-spacing: -0.02em;
+    text-transform: none;
+    line-height: 1;
+    margin-bottom: 0.1rem;
+  }
+
+  .overlay-items a .line {
+    will-change: transform;
+  }
+
+  @media (max-width: 1000px) {
+    .overlay-items {
+      flex-direction: column;
+      justify-content: flex-end;
+      padding: 2rem 2rem 4rem;
+    }
+
+    .overlay-primary a { font-size: 3rem; }
+
+    .overlay-col:nth-child(1) { flex: none; }
+    .overlay-col:nth-child(2) { flex: none; justify-content: flex-start; align-items: flex-start; }
+  }
+</style>

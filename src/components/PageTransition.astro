@@ -1,0 +1,127 @@
+---
+---
+
+<script>
+  import gsap from "gsap";
+  import { SplitText } from "gsap/SplitText";
+
+  gsap.registerPlugin(SplitText);
+
+  // Los elementos del overlay tienen su propia lógica — se excluyen aquí
+  const isOverlay = (el: HTMLElement) => !!el.closest("#overlay-menu");
+
+  const getShowreelTrigger = () =>
+    document.querySelector<HTMLElement>("#showreel-trigger");
+
+  // ── Entrada: elementos aparecen con SplitText ────────────────────────────────
+  const animateIn = () => {
+    document.querySelectorAll<HTMLElement>("[data-split]").forEach((el) => {
+      if (isOverlay(el)) return;
+      const type = el.dataset.split as "chars" | "words" | "lines";
+      gsap.set(el, { opacity: 1 });
+
+      if (type === "chars") {
+        const split = new SplitText(el, { type: "words, chars", mask: "chars", charsClass: "char" });
+        gsap.from(split.chars, {
+          duration: 1,
+          yPercent: -120,
+          scale: 1.2,
+          stagger: 0.01,
+          ease: "expo.out",
+          onComplete: () => { split.revert(); gsap.set(el, { opacity: 1 }); },
+        });
+      } else {
+        const split = new SplitText(el, { type: "lines, words", mask: "lines", linesClass: "line" });
+        gsap.from(split.lines, {
+          duration: 0.9,
+          yPercent: 105,
+          stagger: 0.04,
+          ease: "expo.out",
+          onComplete: () => { split.revert(); gsap.set(el, { opacity: 1 }); },
+        });
+      }
+    });
+
+    const trigger = getShowreelTrigger();
+    if (trigger && (gsap.getProperty(trigger, "opacity") as number) < 1) {
+      gsap.fromTo(trigger,
+        { opacity: 0, y: 14 },
+        { opacity: 1, y: 0, duration: 0.6, delay: 0.25, ease: "power2.out" }
+      );
+    }
+  };
+
+  // Si el preloader está activo en esta visita, esperar que termine antes de animar
+  if (sessionStorage.getItem("__preloaderDone")) {
+    gsap.delayedCall(0.1, animateIn);
+  } else {
+    window.addEventListener("preloaderDone", () => gsap.delayedCall(0.2, animateIn), { once: true });
+  }
+
+  // ── Salida: elementos visibles desaparecen progresivamente, luego navega ─────
+  document.querySelectorAll<HTMLAnchorElement>("a[href]").forEach((link) => {
+    const href = link.getAttribute("href") ?? "";
+    if (
+      !href ||
+      href.startsWith("#") ||
+      href.startsWith("mailto:") ||
+      href.startsWith("tel:") ||
+      link.target === "_blank" ||
+      link.closest("#overlay-menu") // el overlay gestiona su propia navegación
+    ) return;
+
+    link.addEventListener("click", (e) => {
+      if (link.href === window.location.href) return;
+      e.preventDefault();
+      const dest = link.href;
+
+      const trigger = getShowreelTrigger();
+
+      const els = Array.from(document.querySelectorAll<HTMLElement>("[data-split]")).filter((el) => {
+        if (isOverlay(el)) return false;
+        const r = el.getBoundingClientRect();
+        return r.top < window.innerHeight && r.bottom > 0;
+      });
+
+      let pending = els.length + (trigger ? 1 : 0);
+      if (pending === 0) { window.location.href = dest; return; }
+      const navigate = () => { if (--pending === 0) window.location.href = dest; };
+
+      if (trigger) {
+        gsap.to(trigger, { opacity: 0, y: 14, duration: 0.3, ease: "power2.in", onComplete: navigate });
+      }
+
+      els.forEach((el, i) => {
+        const type = el.dataset.split as "chars" | "words" | "lines";
+        gsap.set(el, { opacity: 1 });
+
+        if (type === "chars") {
+          const split = new SplitText(el, { type: "words, chars", mask: "chars" });
+          gsap.to(split.chars, {
+            yPercent: -110,
+            stagger: 0.01,
+            duration: 0.4,
+            ease: "power3.in",
+            delay: i * 0.08,
+            onComplete: navigate,
+          });
+        } else {
+          const split = new SplitText(el, { type: "lines, words", mask: "lines" });
+          gsap.to(split.lines, {
+            yPercent: -110,
+            stagger: 0.03,
+            duration: 0.4,
+            ease: "power3.in",
+            delay: i * 0.08,
+            onComplete: navigate,
+          });
+        }
+      });
+    });
+  });
+</script>
+
+<style>
+  :global([data-split]) { opacity: 0; }
+  :global(#overlay-menu [data-split]) { opacity: 1; }
+</style>

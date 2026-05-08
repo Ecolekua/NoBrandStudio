@@ -1,0 +1,143 @@
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+@plugin "tailwind-scrollbar-hide";
+
+/* dark: clases solo activan cuando existe un ancestro con clase .dark
+   (no por preferencia del sistema operativo) */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ============================================================
+   DESIGN TOKENS — única fuente de verdad
+   Cambia aquí para que afecte a TODO el sitio
+   ============================================================ */
+@theme {
+  /* ── Tipografía ──────────────────────────────────────────── */
+  --font-sans: "DM Sans", sans-serif;   /* fuente principal de ambas páginas  */
+  --font-mono: "DM Mono", monospace;    /* UI del homepage (nav, footer, listas) */
+
+  /* ── Acento (verde-teal OKLCH) ───────────────────────────── */
+  --color-accent-50:  oklch(0.982 0.029 125.9);
+  --color-accent-100: oklch(0.961 0.065 127.2);
+  --color-accent-200: oklch(0.925 0.122 129.7);
+  --color-accent-300: oklch(0.877 0.179 131.4);
+  --color-accent-400: oklch(0.839 0.199 132.6);
+  --color-accent-500: oklch(0.744 0.209 135);
+  --color-accent-600: oklch(0.628 0.18  135.7);
+  --color-accent-700: oklch(0.517 0.143 135.4);
+  --color-accent-800: oklch(0.441 0.115 134.8);
+  --color-accent-900: oklch(0.394 0.096 135);
+  --color-accent-950: oklch(0.268 0.069 135.7);
+
+  /* ── Base / neutros (escala de grises OKLCH) ─────────────── */
+  --color-base-50:  oklch(0.985 0 0);
+  --color-base-100: oklch(0.97  0 0);
+  --color-base-200: oklch(0.922 0 0);
+  --color-base-300: oklch(0.87  0 0);
+  --color-base-400: oklch(0.708 0 0);
+  --color-base-500: oklch(0.556 0 0);
+  --color-base-600: oklch(0.439 0 0);
+  --color-base-700: oklch(0.371 0 0);
+  --color-base-800: oklch(0.269 0 0);
+  --color-base-900: oklch(0.205 0 0);
+  --color-base-950: oklch(0.145 0 0);
+}
+
+/* ============================================================
+   BASE LAYER — solo reglas verdaderamente globales
+   Las utilidades de Tailwind siempre ganan sobre @layer base
+   ============================================================ */
+@layer base {
+  /* Tamaño de h1 global — el studio lo sobreescribe con sus clases
+     responsivas (displayLG etc.); el homepage lo hereda directamente */
+  h1 {
+    font-size: 3rem;
+    font-weight: 500;
+    line-height: 1;
+  }
+
+  @media (max-width: 1000px) {
+    h1 { font-size: 2rem; }
+  }
+
+  /* ── Homepage únicamente ────────────────────────────────────
+     El texto blanco sobre fondo blanco es el mecanismo visual
+     del homepage: mix-blend-difference lo invierte a negro.
+     Solo aplica a .page-home, no contamina el studio.
+     ──────────────────────────────────────────────────────── */
+  .page-home h1 {
+    color: #fff;
+  }
+
+  .page-home p,
+  .page-home a {
+    color: #fff;
+    text-decoration: none;
+    text-transform: uppercase;
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    font-weight: 550;
+    line-height: 1;
+    display: inline-block;
+  }
+}
+
+/* ============================================================
+   COMPONENTES DEL HOMEPAGE
+   ============================================================ */
+
+/* Clip-path container — gestionado por GSAP */
+.client-img-wrapper {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  clip-path: polygon(50% 50%, 50% 50%, 50% 50%, 50% 50%);
+  will-change: clip-path;
+  overflow: hidden;
+}
+
+.client-img-wrapper img {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  will-change: transform, opacity;
+}
+
+/* Underline sweep al hover */
+.client-name {
+  position: relative;
+  display: inline-block;
+  cursor: pointer;
+}
+
+.client-name::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: 0.15rem;
+  background: #fff;
+  transform: scaleX(0);
+  transform-origin: right;
+  transition: transform 300ms ease-out;
+}
+
+.client-name:hover::after {
+  transform: scaleX(1);
+  transform-origin: left;
+}
+
+/* Responsive del homepage */
+@media (max-width: 1000px) {
+  #clients-preview {
+    width: 100% !important;
+    height: 100% !important;
+  }
+
+  .clients-list {
+    width: 100% !important;
+  }
+}

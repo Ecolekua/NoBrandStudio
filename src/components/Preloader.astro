@@ -1,0 +1,343 @@
+---
+interface Props {
+  showreelSrc?: string;
+}
+const { showreelSrc = "" } = Astro.props;
+const imgs = Array.from({ length: 12 }, (_, i) => i + 1);
+---
+
+<div id="preloader">
+  <div class="pl-bg"></div>
+
+  <div class="pl-counter">
+    <div class="pl-c1 pl-digit"></div>
+    <div class="pl-c2 pl-digit"></div>
+    <div class="pl-c3 pl-digit"></div>
+  </div>
+
+  <p class="pl-credit">Developed by Codegrid</p>
+
+  <div class="pl-images">
+    {imgs.map((n) => (
+      <div class="pl-img">
+        <img src={`/img${n}.jpg`} alt="" loading="eager" decoding="sync" />
+      </div>
+    ))}
+  </div>
+
+  <!-- Modal del showreel — se expande desde el recuadro -->
+  <div id="showreel-modal">
+    <button class="showreel-close" aria-label="Cerrar">✕</button>
+    <video
+      id="showreel-video"
+      src={showreelSrc}
+      playsinline
+      loop
+      poster={imgs.length ? `/img1.jpg` : ""}
+    ></video>
+  </div>
+</div>
+
+<script>
+  import gsap from "gsap";
+  import { Flip } from "gsap/Flip";
+
+  gsap.registerPlugin(Flip);
+
+  const pl = document.getElementById("preloader") as HTMLElement;
+  const allImgs = pl.querySelectorAll<HTMLElement>(".pl-img");
+  const lastImg = allImgs[allImgs.length - 1] as HTMLElement;
+
+  // ── Lógica del showreel (compartida entre primera carga y recargas) ──────────
+  const setupShowreel = () => {
+    const modal = document.getElementById("showreel-modal") as HTMLElement;
+    const video = document.getElementById("showreel-video") as HTMLVideoElement;
+    const closeBtn = modal.querySelector(".showreel-close") as HTMLElement;
+
+    lastImg.addEventListener("click", () => {
+      const rect = lastImg.getBoundingClientRect();
+      gsap.set(modal, {
+        display: "flex",
+        left: rect.left,
+        top: rect.top,
+        width: rect.width,
+        height: rect.height,
+        borderRadius: "0.5rem",
+        pointerEvents: "auto",
+      });
+      gsap.to(modal, {
+        left: 0,
+        top: 0,
+        width: "100vw",
+        height: "100vh",
+        borderRadius: 0,
+        duration: 0.75,
+        ease: "expo.inOut",
+        onComplete: () => { if (video.src) video.play(); },
+      });
+    });
+
+    closeBtn.addEventListener("click", () => {
+      video.pause();
+      video.currentTime = 0;
+      const rect = lastImg.getBoundingClientRect();
+      gsap.to(modal, {
+        left: rect.left,
+        top: rect.top,
+        width: rect.width,
+        height: rect.height,
+        borderRadius: "0.5rem",
+        duration: 0.6,
+        ease: "expo.inOut",
+        onComplete: () => { gsap.set(modal, { display: "none", pointerEvents: "none" }); },
+      });
+    });
+  };
+
+  if (sessionStorage.getItem("__preloaderDone")) {
+    // ── Recarga: mostrar solo el recuadro en su posición final ────────────────
+    pl.style.visibility = "visible";
+    pl.style.background = "transparent";
+    pl.style.pointerEvents = "none";
+
+    gsap.set([
+      pl.querySelector(".pl-bg"),
+      pl.querySelector(".pl-counter"),
+      pl.querySelector(".pl-credit"),
+    ], { display: "none" });
+
+    allImgs.forEach((img, i) => {
+      if (i < allImgs.length - 1) gsap.set(img, { display: "none" });
+    });
+
+    lastImg.id = "showreel-trigger";
+    lastImg.classList.add("out");
+    gsap.set(lastImg, { scale: 1, opacity: 0 });
+    lastImg.style.pointerEvents = "auto";
+    lastImg.style.cursor = "pointer";
+
+    setupShowreel();
+  } else {
+    pl.style.visibility = "visible";
+
+    // ── Dígitos del contador ───────────────────────────────────────────────────
+    const c1 = pl.querySelector(".pl-c1") as HTMLElement;
+    const c2 = pl.querySelector(".pl-c2") as HTMLElement;
+    const c3 = pl.querySelector(".pl-c3") as HTMLElement;
+
+    const addNum = (parent: HTMLElement, text: string, cls = "") => {
+      const d = document.createElement("div");
+      d.className = cls ? `pl-num ${cls}` : "pl-num";
+      d.textContent = text;
+      parent.appendChild(d);
+    };
+
+    addNum(c1, "0");
+    addNum(c1, "1", "pl-offset1");
+    for (let i = 0; i <= 10; i++)
+      addNum(c2, String(i === 10 ? 0 : i), i === 1 ? "pl-offset2" : "");
+    for (let i = 0; i < 30; i++) addNum(c3, String(i % 10));
+    addNum(c3, "0");
+
+    const animateCounter = (el: HTMLElement, dur: number, delay = 0) => {
+      const h = (el.querySelector(".pl-num") as HTMLElement).clientHeight;
+      gsap.to(el, { y: -(el.querySelectorAll(".pl-num").length - 1) * h, duration: dur, delay, ease: "power2.inOut" });
+    };
+
+    animateCounter(c3, 2.5);
+    animateCounter(c2, 3);
+    animateCounter(c1, 2, 1.5);
+
+    // ── Flip de imágenes ───────────────────────────────────────────────────────
+    const animateImages = () => {
+      const images = pl.querySelectorAll(".pl-img");
+      images.forEach((img) => img.classList.remove("out"));
+      const state = Flip.getState(images);
+      images.forEach((img) => img.classList.add("out"));
+
+      const mainTl = gsap.timeline();
+      mainTl.add(Flip.from(state, { duration: 0.8, stagger: 0.08, ease: "power3.inOut" }));
+      images.forEach((img, i) => {
+        const sc = gsap.timeline();
+        sc.to(img, { scale: 2.5, duration: 0.35, ease: "power3.in" }, 0.025)
+          .to(img, { scale: 1, duration: 0.35, ease: "power3.out" }, 0.38);
+        mainTl.add(sc, i * 0.08);
+      });
+    };
+
+    // ── Timeline principal ─────────────────────────────────────────────────────
+    gsap.set(allImgs, { scale: 0 });
+
+    const tl = gsap.timeline();
+
+    tl.to(pl.querySelector(".pl-bg"), {
+      scaleY: "100%",
+      duration: 2.5,
+      ease: "power2.inOut",
+      delay: 0.25,
+    });
+
+    tl.to(allImgs, { scale: 1, duration: 0.8, stagger: 0.1, ease: "power3.out" }, "<");
+
+    tl.to(pl.querySelector(".pl-counter"), {
+      opacity: 0,
+      duration: 0.3,
+      delay: 0.3,
+      onStart: () => { animateImages(); },
+    });
+
+    // ── Reveal: fondo desaparece, queda solo el último recuadro ───────────────
+    tl.call(() => {
+      if (allImgs.length > 1) {
+        gsap.to(Array.from(allImgs).slice(0, -1), { opacity: 0, duration: 0.35, ease: "power2.out" });
+      }
+
+      gsap.to([pl.querySelector(".pl-bg"), pl.querySelector(".pl-credit")], {
+        opacity: 0,
+        duration: 0.6,
+        ease: "power2.inOut",
+      });
+
+      gsap.delayedCall(0.65, () => {
+        pl.style.background = "transparent";
+        pl.style.pointerEvents = "none";
+        lastImg.style.pointerEvents = "auto";
+        lastImg.style.cursor = "pointer";
+
+        lastImg.id = "showreel-trigger";
+        sessionStorage.setItem("__preloaderDone", "1");
+        window.dispatchEvent(new CustomEvent("preloaderDone"));
+
+        setupShowreel();
+      });
+    }, [], "+=1.5");
+  }
+</script>
+
+<style>
+  #preloader {
+    position: fixed;
+    inset: 0;
+    z-index: 99999;
+    background: #fff;
+    overflow: hidden;
+    visibility: hidden;
+  }
+
+  .pl-bg {
+    position: absolute;
+    inset: 0;
+    background: #f0f0f0;
+    transform-origin: bottom;
+    transform: scaleY(0);
+  }
+
+  /* ── Contador ─────────────────────────────────────────────────────────────── */
+  .pl-counter {
+    position: absolute;
+    right: 2rem;
+    bottom: 1.5rem;
+    display: flex;
+    height: 72px;
+    font-size: 72px;
+    line-height: 90px;
+    font-family: var(--font-mono);
+    color: #1a1a1a;
+    clip-path: polygon(0 0, 100% 0, 100% 72px, 0 72px);
+    z-index: 3;
+  }
+
+  .pl-digit  { position: relative; top: -9px; }
+  .pl-offset1 { position: relative; right: -18px; }
+  .pl-offset2 { position: relative; right: -9px; }
+
+  /* ── Crédito ──────────────────────────────────────────────────────────────── */
+  .pl-credit {
+    position: absolute;
+    bottom: 1.5rem;
+    right: 1.5rem;
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #999;
+    z-index: 1;
+  }
+
+  /* ── Imágenes ─────────────────────────────────────────────────────────────── */
+  .pl-images {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+  }
+
+  .pl-img {
+    position: absolute;
+    top: 1.5rem;
+    left: 1.5rem;
+    width: 11%;
+    aspect-ratio: 5 / 3;
+    border-radius: 0.5rem;
+    overflow: hidden;
+  }
+
+  .pl-img.out {
+    top: unset;
+    left: unset;
+    bottom: 1.5rem;
+    right: 1.5rem;
+  }
+
+  .pl-img img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  /* ── Modal showreel ───────────────────────────────────────────────────────── */
+  #showreel-modal {
+    position: fixed;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    background: #000;
+    z-index: 100000;
+    overflow: hidden;
+  }
+
+  #showreel-modal video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .showreel-close {
+    position: absolute;
+    top: 1.5rem;
+    right: 1.5rem;
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 1.5rem;
+    cursor: pointer;
+    z-index: 10;
+    line-height: 1;
+    padding: 0.5rem;
+    opacity: 0.7;
+    transition: opacity 0.2s;
+  }
+
+  .showreel-close:hover { opacity: 1; }
+
+  @media (max-width: 768px) {
+    .pl-counter {
+      font-size: 48px;
+      height: 48px;
+      line-height: 60px;
+      clip-path: polygon(0 0, 100% 0, 100% 48px, 0 48px);
+    }
+    .pl-digit { top: -6px; }
+    .pl-img { width: 40%; }
+  }
+</style>

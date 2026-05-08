@@ -1,0 +1,15 @@
+---
+interface Props {
+  variant?: "standard" | "prose";
+  class?: string;
+}
+const { variant = "standard", class: extraClass = "" } = Astro.props;
+const variantClasses = {
+  standard: "w-[97%] mx-auto",
+};
+const classes = `${variantClasses[variant]} ${extraClass}`.trim();
+---
+
+<div class={classes}>
+  <slot />
+</div>

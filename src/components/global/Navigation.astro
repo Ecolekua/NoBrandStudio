@@ -1,0 +1,51 @@
+---
+// Assets
+import Logo from "@/components/assets/Logo.astro";
+// Fundations
+import Text from "@/components/fundations/elements/Text.astro";
+import Button from "@/components/fundations/elements/Button.astro";
+import Wrapper from "@/components/fundations/containers/Wrapper.astro";
+
+const links = [
+  { href: "#work", text: "Work" },
+  { href: "#projects", text: "Projects" },
+  { href: "#education", text: "Education" },
+  { href: "#speaking", text: "Speaking" },
+  { href: "/system/overview", text: "Components" },
+];
+---
+
+<nav class="bg-white dark:bg-base-950 fixed top-0 z-10 w-full">
+  <Wrapper variant="standard" class="py-2">
+    <div class="grid grid-cols-3 lg:grid-cols-4 items-start">
+      <a href="/" class="-mt-1 flex">
+        <Logo
+          class="text-base-600 dark:text-base-300 text-xs tracking-tight font-base-900"
+        />
+      </a>
+      <Text
+        tag="p"
+        variant="textXS"
+        class="text-base-600 dark:text-base-300 tracking-tight font-base"
+      >
+        Helsinki, Finland<br />Creative Technologist
+      </Text>
+      <div class="hidden lg:flex gap-8 text-sm items-center">
+        {
+          links.map((link) => (
+            <a
+              href={link.href}
+              class="text-base-600 dark:text-base-300  tracking-tight text-xs"
+            >
+              {link.text}
+            </a>
+          ))
+        }
+      </div>
+      <a
+        class="text-base-600 dark:text-base-300 text-xs tracking-tight font-base ml-auto"
+        >Download
+      </a>
+    </div>
+  </Wrapper>
+</nav>

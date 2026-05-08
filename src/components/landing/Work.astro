@@ -1,0 +1,112 @@
+---
+// Assets
+import { Image } from "astro:assets";
+import one from "@/images/work/one.png";
+import two from "@/images/work/two.png";
+import three from "@/images/work/three.png";
+// Fundations
+import Text from "@/components/fundations/elements/Text.astro";
+import Wrapper from "@/components/fundations/containers/Wrapper.astro";
+const featuredProjects = [
+  {
+    year: "2026",
+    title: "BRoom",
+    description:
+      "An electric vehicle platform built around modular hardware, real-time telemetry, and software-defined systems for efficiency, autonomy, and long-term scalability.",
+    category: "Electric Vehicle Platform",
+    image: one,
+    imageAlt:
+      "Electric car in motion against a minimal background, highlighting a digital cockpit and aerodynamic design.",
+  },
+
+  {
+    year: "2026",
+    title: "Aurora Ride",
+    description:
+      "An electric mobility subscription focused on real-time diagnostics, predictive maintenance, and low-friction commuter flows.",
+    category: "Product Systems",
+    image: two,
+    imageAlt:
+      "Modern electric bicycle positioned against a minimal, light-colored wall.",
+  },
+  {
+    year: "2026",
+    title: "Northwind",
+    description:
+      "An electric device platform built around efficient power management, embedded firmware, and production-ready industrial design for reliable, scalable deployment.",
+    category: "Hardware & Embedded Systems",
+    image: three,
+    imageAlt:
+      "Minimal electric device on a clean surface, showing precision controls, status indicators, and compact industrial design.",
+  },
+];
+---
+
+<section class="scroll-mt-32" id="work">
+  <Wrapper variant="standard" class="py-12 lg:py-24">
+    <div class="grid grid-cols-1 lg:grid-cols-4 items-start">
+      <div class="lg:col-start-2">
+        <Text tag="p" variant="textSM" class="text-base-600 dark:text-base-300"
+          >Featured Work
+          <br />
+          2026 - Now</Text
+        >
+      </div>
+      <Text
+        tag="h2"
+        variant="textXL"
+        class="font-semibold leading-snug text-left tracking-tighter lg:col-span-2 text-base-900 dark:text-white"
+      >
+        Work
+      </Text>
+    </div>
+
+    <div class="flex flex-col lg:gap-12 mt-8">
+      {
+        featuredProjects.map((project) => (
+          <article class="py-12 border-t border-base-200 dark:border-base-800">
+            <div class="grid grid-cols-1 gap-4 lg:grid-cols-4 items-start">
+              <Text
+                tag="p"
+                variant="textXS"
+                class="text-base-600 dark:text-base-300 uppercase"
+              >
+                {project.year}
+              </Text>
+              <Text
+                tag="h3"
+                variant="displaySM"
+                class="text-base-900 dark:text-white leading-tight font-semibold "
+              >
+                {project.title}
+              </Text>
+              <Text
+                tag="p"
+                variant="textSM"
+                class="text-base-600 dark:text-base-300"
+              >
+                {project.description}
+              </Text>
+              <Text
+                tag="p"
+                variant="textXS"
+                class="text-base-600 dark:text-base-300 uppercase lg:ml-auto lg:col-start-4"
+              >
+                {project.category}
+              </Text>
+            </div>
+            <Image
+              width={1420}
+              height={930}
+              src={project.image}
+              alt={project.imageAlt}
+              loading="lazy"
+              decoding="async"
+              class="size-full aspect-4/2 rounded-4xl mt-12 object-cover object-center"
+            />
+          </article>
+        ))
+      }
+    </div>
+  </Wrapper>
+</section>
