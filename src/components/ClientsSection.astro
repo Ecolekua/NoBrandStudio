@@ -1,41 +1,46 @@
 ---
 const clients = [
-  "Native Instruments,",
-  "Oura,",
-  "Hender Scheme,",
-  "B&O Play,",
-  "Nothing,",
-  "Gentle Monster,",
-  "Officine Panerai,",
-  "Polestar,",
-  "Fragment Design,",
-  "Superfuture,",
-  "Bang & Olufsen,",
-  "Sonos.",
+  { name: "Estudio Larco,",       href: "https://www.native-instruments.com", video: "/videos/estudioLarco.mp4" },
+  { name: "Procolor,",            href: "https://ouraring.com" },
+  { name: "Heel Chile,",          href: "https://hender-scheme.com" },
+  { name: "Producciones 19,",     href: "https://www.bang-olufsen.com" },
+  { name: "3D,",                  href: "https://nothing.tech" },
+  { name: "Serres Verificadora,", href: "https://www.gentlemonster.com" },
+  { name: "Srt Refrigeración,",   href: "https://www.panerai.com" },
+  { name: "Experimental,",        href: "https://www.polestar.com",   video: "/videos/experimental.mp4" },
+  { name: "UX Design,",           href: "https://fragment.design" },
+  { name: "Web Creative,",        href: "https://superfuture.com",    video: "/videos/webcreative.mp4" },
+  { name: "Type Code.",           href: "https://www.sonos.com" },
 ];
 ---
 
 <section
-  class="relative w-full h-[103svh] p-8 flex flex-col justify-end items-start gap-8 overflow-hidden"
+  class="relative w-full h-[100svh] p-8 flex flex-col justify-end items-start gap-8 overflow-hidden"
 >
-  <!-- Image preview — centered, sized 60% × 50% on desktop, full on mobile -->
   <div
     id="clients-preview"
     class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[60%] h-1/2 z-0 pointer-events-none"
   ></div>
 
   <div class="relative z-[1] hidden lg:flex ">
-    <p data-split="chars" style="color: #acacac;">Trusted Us</p>
+    <p data-split="chars" style="color: #acacac;">Confían en nosotros</p>
   </div>
 
   <div
     class="clients-list relative w-4/5 mb-32 flex flex-wrap justify-start gap-3 mix-blend-difference z-[2]"
   >
     {
-      clients.map((name) => (
-        <div data-split="words" class="client-name">
-          <h1>{name}</h1>
-        </div>
+      clients.map((client) => (
+        <a
+          href={client.href}
+          target="_blank"
+          rel="noopener noreferrer"
+          data-split="words"
+          data-video={client.video ?? ""}
+          class="client-name"
+        >
+          <h1>{client.name}</h1>
+        </a>
       ))
     }
   </div>
@@ -52,17 +57,14 @@ const clients = [
     "M0,0 C0.071,0.505 0.192,0.726 0.318,0.852 0.45,0.984 0.504,1 1,1"
   );
 
-  const clientsPreview = document.getElementById(
-    "clients-preview"
-  ) as HTMLElement;
-  const clientNames =
-    document.querySelectorAll<HTMLElement>(".client-name");
+  const clientsPreview = document.getElementById("clients-preview") as HTMLElement;
+  const clientNames = document.querySelectorAll<HTMLElement>(".client-name");
 
   let activeClientIndex = -1;
 
   clientNames.forEach((client, index) => {
-    let activeClientImgWrapper: HTMLDivElement | null = null;
-    let activeClientImg: HTMLImageElement | null = null;
+    let activeWrapper: HTMLDivElement | null = null;
+    let activeMedia: HTMLImageElement | HTMLVideoElement | null = null;
 
     client.addEventListener("mouseover", () => {
       if (activeClientIndex === index) return;
@@ -73,38 +75,49 @@ const clients = [
 
       activeClientIndex = index;
 
-      const clientImgWrapper = document.createElement("div");
-      clientImgWrapper.className = "client-img-wrapper";
+      const wrapper = document.createElement("div");
+      wrapper.className = "client-img-wrapper";
 
-      const clientImg = document.createElement("img");
-      clientImg.src = `/img${index + 1}.jpg`;
-      clientImg.alt = "";
-      gsap.set(clientImg, { scale: 1.25, opacity: 0 });
-      gsap.set(clientImgWrapper, { clipPath: "polygon(50% 50%, 50% 50%, 50% 50%, 50% 50%)" });
+      const videoSrc = client.dataset.video;
+      let media: HTMLImageElement | HTMLVideoElement;
 
-      clientImgWrapper.appendChild(clientImg);
-      clientsPreview.appendChild(clientImgWrapper);
+      if (videoSrc) {
+        const video = document.createElement("video");
+        video.src = videoSrc;
+        video.autoplay = true;
+        video.muted = true;
+        video.loop = true;
+        video.playsInline = true;
+        video.style.cssText = "width:100%;height:100%;object-fit:cover;";
+        media = video;
+      } else {
+        const img = document.createElement("img");
+        img.src = `/img${index + 1}.jpg`;
+        img.alt = "";
+        media = img;
+      }
 
-      activeClientImgWrapper = clientImgWrapper;
-      activeClientImg = clientImg;
+      gsap.set(media, { scale: 1.25, opacity: 0 });
+      gsap.set(wrapper, { clipPath: "polygon(50% 50%, 50% 50%, 50% 50%, 50% 50%)" });
 
-      gsap.to(clientImgWrapper, {
+      wrapper.appendChild(media);
+      clientsPreview.appendChild(wrapper);
+
+      if (media instanceof HTMLVideoElement) {
+        media.play().catch(() => {});
+      }
+
+      activeWrapper = wrapper;
+      activeMedia = media;
+
+      gsap.to(wrapper, {
         clipPath: "polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)",
         duration: 0.5,
         ease: "hop",
       });
 
-      gsap.to(clientImg, {
-        opacity: 1,
-        duration: 0.25,
-        ease: "power2.out",
-      });
-
-      gsap.to(clientImg, {
-        scale: 1,
-        duration: 1.25,
-        ease: "hop",
-      });
+      gsap.to(media, { opacity: 1, duration: 0.25, ease: "power2.out" });
+      gsap.to(media, { scale: 1, duration: 1.25, ease: "hop" });
     });
 
     client.addEventListener("mouseout", (event) => {
@@ -113,18 +126,21 @@ const clients = [
 
       if (activeClientIndex === index) activeClientIndex = -1;
 
-      if (activeClientImg && activeClientImgWrapper) {
-        const imgToRemove = activeClientImg;
-        const wrapperToRemove = activeClientImgWrapper;
+      if (activeMedia && activeWrapper) {
+        const mediaToRemove = activeMedia;
+        const wrapperToRemove = activeWrapper;
 
-        activeClientImg = null;
-        activeClientImgWrapper = null;
+        activeMedia = null;
+        activeWrapper = null;
 
-        gsap.to(imgToRemove, {
+        gsap.to(mediaToRemove, {
           opacity: 0,
           duration: 0.5,
           ease: "power1.out",
-          onComplete: () => wrapperToRemove.remove(),
+          onComplete: () => {
+            if (mediaToRemove instanceof HTMLVideoElement) mediaToRemove.pause();
+            wrapperToRemove.remove();
+          },
         });
       }
     });

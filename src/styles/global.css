@@ -114,6 +114,8 @@
   position: relative;
   display: inline-block;
   cursor: pointer;
+  text-transform: none;
+  font-family: var(--font-sans);
 }
 
 .client-name::after {
