@@ -3,14 +3,14 @@ import OverlayMenu from "./OverlayMenu.astro";
 ---
 
 <nav class="fixed top-0 w-full mix-blend-difference z-[11]">
-  <div class="grid grid-cols-3 lg:grid-cols-4 items-start px-8 py-4">
+  <div class="grid grid-cols-3 lg:grid-cols-4 items-center px-8 py-4">
 
     <div class="flex items-center">
       <a id="logo-link" href="/">No Brand Studio.</a>
       <span class="typing-indicator">█</span>
     </div>
 
-    <p data-split="words" class="hidden lg:block">Santiago, chile<br />Creative Technologist</p>
+    <p data-split="words">Santiago, chile<br />Creative Technologist</p>
     <div id="nav-links" class="hidden lg:flex gap-6 items-center">
 
       <a data-split="words" href="/">Home</a>
@@ -92,6 +92,10 @@ import OverlayMenu from "./OverlayMenu.astro";
   p {
     display: block;
     line-height: 1.4;
+  }
+
+  @media (max-width: 1023px) {
+    p { visibility: hidden; pointer-events: none; }
   }
 
   .typing-indicator {
