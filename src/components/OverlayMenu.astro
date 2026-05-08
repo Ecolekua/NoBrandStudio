@@ -112,14 +112,13 @@
   toggle.addEventListener("click", () => {
     if (isAnimating) return;
     isAnimating = true;
-    const label = toggle.querySelector(".toggle-label") as HTMLElement;
 
     const pageContent = document.querySelectorAll<HTMLElement>("main, section, footer");
 
     if (!isOpen) {
       // Abrir: ocultar contenido de página + bajar cortina → animateWordsIn
       overlayMenu.style.pointerEvents = "auto";
-      if (label) label.textContent = "Close";
+      toggle.classList.add("is-open");
       if (navLinks) gsap.to(navLinks, { opacity: 0, duration: 0.25 });
       gsap.to(pageContent, { opacity: 0, duration: 0.25, delay: 0.4 });
       tl.play();
@@ -127,7 +126,7 @@
     } else {
       // Cerrar: textos salen → cortina sube → restaurar página
       pendingDest = "";
-      if (label) label.textContent = "Download";
+      toggle.classList.remove("is-open");
       if (navLinks) gsap.to(navLinks, { opacity: 1, duration: 0.25 });
       animateWordsOut(() => {
         tl.reverse();
@@ -150,8 +149,6 @@
       isOpen = false;
       overlayMenu.style.pointerEvents = "none";
 
-      const label = toggle.querySelector(".toggle-label") as HTMLElement;
-      if (label) label.textContent = "Download";
       if (navLinks) gsap.set(navLinks, { opacity: 0 });
 
       // Ocultar contenido de la página actual para que no sea visible
