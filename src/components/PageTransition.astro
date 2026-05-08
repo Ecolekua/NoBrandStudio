@@ -13,6 +13,9 @@
   const getShowreelTrigger = () =>
     document.querySelector<HTMLElement>("#showreel-trigger");
 
+  const getHamburger = () =>
+    document.querySelector<HTMLElement>("#menu-toggle");
+
   // ── Entrada: elementos aparecen con SplitText ────────────────────────────────
   const animateIn = () => {
     document.querySelectorAll<HTMLElement>("[data-split]").forEach((el) => {
@@ -49,6 +52,14 @@
         { opacity: 1, y: 0, duration: 0.6, delay: 0.25, ease: "power2.out" }
       );
     }
+
+    const hamburger = getHamburger();
+    if (hamburger) {
+      gsap.fromTo(hamburger,
+        { opacity: 0, y: -8 },
+        { opacity: 1, y: 0, duration: 0.5, delay: 0.2, ease: "power2.out" }
+      );
+    }
   };
 
   // Si el preloader está activo en esta visita, esperar que termine antes de animar
@@ -83,12 +94,17 @@
         return r.top < window.innerHeight && r.bottom > 0;
       });
 
-      let pending = els.length + (trigger ? 1 : 0);
+      const hamburger = getHamburger();
+
+      let pending = els.length + (trigger ? 1 : 0) + (hamburger ? 1 : 0);
       if (pending === 0) { window.location.href = dest; return; }
       const navigate = () => { if (--pending === 0) window.location.href = dest; };
 
       if (trigger) {
         gsap.to(trigger, { opacity: 0, y: 14, duration: 0.3, ease: "power2.in", onComplete: navigate });
+      }
+      if (hamburger) {
+        gsap.to(hamburger, { opacity: 0, y: -8, duration: 0.3, ease: "power2.in", onComplete: navigate });
       }
 
       els.forEach((el, i) => {

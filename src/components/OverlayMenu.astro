@@ -14,18 +14,18 @@
         <p>Creative Technologist</p>
       </div>
       <div class="overlay-secondary">
-        <a data-split="words" href="/studio#work">Work</a>
-        <a data-split="words" href="/studio#projects">Projects</a>
-        <a data-split="words" href="/studio#education">Education</a>
-        <a data-split="words" href="/studio#speaking">Speaking</a>
+        <a data-split="words" href="/studio#work">front-end</a>
+        <a data-split="words" href="/studio#projects">Back-end</a>
+        <a data-split="words" href="/studio#education">Creative Web</a>
+        <a data-split="words" href="/studio#speaking">Product Design</a>
       </div>
     </div>
     <div class="overlay-col">
       <div class="overlay-primary">
         <a data-split="words" href="/">Home</a>
         <a data-split="words" href="/studio">Studio</a>
-        <a data-split="words" href="#">Projects</a>
-        <a data-split="words" href="#">About</a>
+        <a data-split="words" href="/lab">Projects</a>
+        <a data-split="words" href="#">Labs.</a>
       </div>
     </div>
   </div>
@@ -157,6 +157,7 @@
 
       const showreelTrigger = document.querySelector<HTMLElement>("#showreel-trigger");
       if (showreelTrigger) gsap.to(showreelTrigger, { opacity: 0, y: 14, duration: 0.3, ease: "power2.in" });
+      gsap.to(toggle, { opacity: 0, y: -8, duration: 0.3, ease: "power2.in" });
 
       animateWordsOut(() => tl.reverse());
     });

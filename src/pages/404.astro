@@ -1,0 +1,58 @@
+---
+import Layout from "../layouts/Layout.astro";
+import CRTDisplay from "@/components/CRTDisplay.astro";
+---
+
+<Layout title="404 — No Brand Studio">
+  <main>
+    <CRTDisplay />
+
+    <div class="ui">
+      <span data-split="words" class="label">ERROR / 404</span>
+      <a data-split="words" href="/" class="back">← Return home</a>
+    </div>
+  </main>
+</Layout>
+
+<style>
+  body {
+    background: #0a0a0a !important;
+    overflow: hidden;
+  }
+
+  main {
+    position: fixed;
+    inset: 0;
+  }
+
+  .ui {
+    position: fixed;
+    inset: 0;
+    z-index: 10;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    padding: 2rem 2.5rem;
+    pointer-events: none;
+  }
+
+  .label, .back {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    font-weight: 400;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #2bff7244;
+  }
+
+  .back {
+    pointer-events: auto;
+    text-decoration: none;
+    color: #2bff7266;
+    transition: color 0.2s ease;
+  }
+
+  .back:hover {
+    color: #2bff72;
+  }
+</style>

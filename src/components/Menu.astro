@@ -13,10 +13,10 @@ import OverlayMenu from "./OverlayMenu.astro";
     <p data-split="words">Santiago, chile<br />Creative Technologist</p>
     <div id="nav-links" class="hidden lg:flex gap-6 items-center">
 
-      <a data-split="words" href="/">Home</a>
+      <a data-split="words" href="/"><span class="typing-indicator">█</span></a>
       <a data-split="words" href="/studio">Studio</a>
       <a data-split="words" href="/lab">Projects</a>
-      <a data-split="words" href="#">About Us</a>
+      <a data-split="words" href="#">Labs</a>
     </div>
 
     <button id="menu-toggle" class="ml-auto lg:hidden hamburger" aria-label="Menu">
@@ -88,6 +88,7 @@ import OverlayMenu from "./OverlayMenu.astro";
     justify-content: space-between;
     width: 22px;
     height: 14px;
+    opacity: 0;
   }
 
   @media (min-width: 1024px) {
