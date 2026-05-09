@@ -51,6 +51,11 @@
    Las utilidades de Tailwind siempre ganan sobre @layer base
    ============================================================ */
 @layer base {
+  ::selection {
+    background: #f5e642;
+    color: #000;
+  }
+
   /* Tamaño de h1 global — el studio lo sobreescribe con sus clases
      responsivas (displayLG etc.); el homepage lo hereda directamente */
   h1 {

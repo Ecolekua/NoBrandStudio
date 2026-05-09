@@ -14,9 +14,12 @@ const imgs = Array.from({ length: 12 }, (_, i) => i + 1);
   <p class="pl-credit">No Brand Studio.</p>
 
   <div class="pl-images">
-    {imgs.map((n) => (
+    {imgs.map((n, i) => (
       <div class="pl-img">
-        <img src={`/img${n}.jpg`} alt="" loading="eager" decoding="sync" />
+        {i === imgs.length - 1
+          ? <video src="/videos/experimental.mp4" autoplay muted loop playsinline></video>
+          : <img src={`/img${n}.jpg`} alt="" loading="eager" decoding="sync" />
+        }
       </div>
     ))}
   </div>
@@ -33,6 +36,8 @@ const imgs = Array.from({ length: 12 }, (_, i) => i + 1);
   import { Flip } from "gsap/Flip";
 
   gsap.registerPlugin(Flip);
+
+  const MODAL_BG = "#e85500"; // ← cambia aquí el color del modal
 
   const pl = document.getElementById("preloader") as HTMLElement;
   const allImgs = pl.querySelectorAll<HTMLElement>(".pl-img");
@@ -60,7 +65,7 @@ const imgs = Array.from({ length: 12 }, (_, i) => i + 1);
       gsap.set(closeBtn, { opacity: 0 });
       gsap.set(modal, {
         display: "flex",
-        background: "#1a1a1a",
+        background: MODAL_BG,
         left: rect.left,
         top: rect.top,
         width: rect.width,
@@ -73,10 +78,10 @@ const imgs = Array.from({ length: 12 }, (_, i) => i + 1);
       // Mobile: pantalla completa sin bordes
       const target = desktop
         ? {
-            left:         window.innerWidth * 0.6,
-            top:          GAP,
-            width:        window.innerWidth * 0.4 - GAP,
-            height:       window.innerHeight - GAP * 2,
+            left:         window.innerWidth * 0.7,
+            top:          window.innerHeight * 0.25 - GAP,
+            width:        window.innerWidth * 0.3 - GAP,
+            height:       window.innerHeight * 0.75,
             borderRadius: "1.25rem",
           }
         : {
@@ -310,7 +315,8 @@ const imgs = Array.from({ length: 12 }, (_, i) => i + 1);
     right: 1.5rem;
   }
 
-  .pl-img img {
+  .pl-img img,
+  .pl-img video {
     width: 100%;
     height: 100%;
     object-fit: cover;
@@ -341,7 +347,7 @@ const imgs = Array.from({ length: 12 }, (_, i) => i + 1);
     right: 1.5rem;
     background: none;
     border: none;
-    color: #f0f0f0;
+    color: #ffffff;
     font-size: 1.5rem;
     cursor: pointer;
     z-index: 10;

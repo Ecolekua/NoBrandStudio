@@ -120,7 +120,7 @@
   const monitorGroup = new THREE.Group();
   scene.add(monitorGroup);
 
-  new GLTFLoader().load("/crt/monitor.glb", (gltf) => {
+  new GLTFLoader().load("/models/monitor.glb", (gltf) => {
     const model = gltf.scene;
     const center = new THREE.Box3().setFromObject(model).getCenter(new THREE.Vector3());
     model.position.sub(center);

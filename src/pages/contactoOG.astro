@@ -79,132 +79,64 @@ import Menu from "@/components/Menu.astro";
     <script>
       import gsap from "gsap";
       import { SplitText } from "gsap/SplitText";
-      import * as THREE from "three";
-      import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 
       gsap.registerPlugin(SplitText);
 
-      // ── Screensaver: objetos 3D rebotando ───────────────────────────────────────
-      const MODELS = [
-        { path: "/models/gameboy.glb",  scale: 0.06 },
-        { path: "/models/monitor.glb", scale: 1   },
-        { path: "/models/vhs.glb",     scale: 1   },
-        { path: "/models/tape.glb",    scale: 2 }, // ← ajusta escala aquí
-      ];
+      // ── Screensaver ──────────────────────────────────────────────────────────────
+      const IMAGES = Array.from({ length: 10 }, (_, i) => `/objects/obj-${i + 1}.png`);
       const CFG = { speed: 1.2, size: 300, edgeOffset: -40, changeDelay: 20 };
 
       const root = document.getElementById("contact-root")!;
       let rId: number | null = null;
-      let wrapper: HTMLElement | null = null;
-      let threeRenderer: THREE.WebGLRenderer | null = null;
+      let ssEl: HTMLElement | null = null;
+      let imgIdx = 0;
 
       const stopSS = () => {
         if (rId !== null) { cancelAnimationFrame(rId); rId = null; }
-        threeRenderer?.dispose();
-        threeRenderer = null;
-        wrapper?.remove();
-        wrapper = null;
+        ssEl?.remove();
+        ssEl = null;
       };
 
       const startSS = () => {
         stopSS();
 
-        // ── Contenedor ────────────────────────────────────────────────────────────
-        wrapper = document.createElement("div");
-        wrapper.style.cssText = `position:absolute;width:${CFG.size}px;height:${CFG.size}px;pointer-events:none;z-index:0;overflow:hidden;`;
-        root.appendChild(wrapper);
+        // Preload first image before appending
+        const first = new Image();
+        first.src = IMAGES[0];
 
-        // ── Three.js ──────────────────────────────────────────────────────────────
-        const scene = new THREE.Scene();
-        const camera = new THREE.PerspectiveCamera(30, 1, 0.1, 1000);
-        camera.position.set(0, 0.15, 0.7);
-        camera.lookAt(0, 0, 0);
+        ssEl = document.createElement("div");
+        ssEl.className = "screensaver-img";
+        root.appendChild(ssEl);
 
-        threeRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-        threeRenderer.setSize(CFG.size, CFG.size);
-        threeRenderer.setPixelRatio(Math.min(devicePixelRatio, 2));
-        threeRenderer.toneMapping = THREE.ACESFilmicToneMapping;
-        threeRenderer.toneMappingExposure = 1.25;
-        wrapper.appendChild(threeRenderer.domElement);
-
-        // ── Iluminación ───────────────────────────────────────────────────────────
-        scene.add(new THREE.AmbientLight(0xffffff, 5));
-        const dirLight = new THREE.DirectionalLight(0xffffff, 2.5);
-        dirLight.position.set(15, 10, -5);
-        scene.add(dirLight);
-        const topLight = new THREE.PointLight(0xffffff, 5, 10);
-        topLight.position.set(-5, -2.5, 0);
-        topLight.decay = 0.3;
-        scene.add(topLight);
-
-        const monitorGroup = new THREE.Group();
-        scene.add(monitorGroup);
-
-        // ── Precargar modelos ─────────────────────────────────────────────────────
-        const loadedModels: THREE.Group[] = new Array(MODELS.length);
-        let modelIdx = 0;
-        let modelsReady = false;
-        let loadedCount = 0;
-        const loader = new GLTFLoader();
-
-        MODELS.forEach(({ path, scale }, i) => {
-          loader.load(path, (gltf) => {
-            const model = gltf.scene;
-            // Escalar primero, luego centrar — así el bounding box es exacto
-            model.scale.setScalar(scale);
-            const center = new THREE.Box3().setFromObject(model).getCenter(new THREE.Vector3());
-            model.position.sub(center);
-            loadedModels[i] = model;
-            loadedCount++;
-            if (loadedCount === MODELS.length) {
-              monitorGroup.add(loadedModels[0]);
-              modelsReady = true;
-            }
-          });
-        });
-
-        // ── Swap de modelo en cada colisión ───────────────────────────────────────
-        const swapModel = () => {
-          monitorGroup.remove(loadedModels[modelIdx]);
-          modelIdx = (modelIdx + 1) % MODELS.length;
-          monitorGroup.add(loadedModels[modelIdx]);
-          // Salto de ángulo amplio para que el cambio sea visible
-          targetRY += Math.PI * (0.6 + Math.random() * 0.6) * (Math.random() > 0.5 ? 1 : -1);
-          targetRX  = (Math.random() - 0.5) * Math.PI * 0.5;
-        };
-
-        // ── Posición y velocidad inicial ──────────────────────────────────────────
-        let x = root.offsetWidth  / 2 - CFG.size / 2;
-        let y = root.offsetHeight / 2 - CFG.size / 2;
+        const r = root.getBoundingClientRect();
+        let x = r.width / 2 - CFG.size / 2;
+        let y = r.height / 2 - CFG.size / 2;
         let vx = (Math.random() > 0.5 ? 1 : -1) * CFG.speed;
         let vy = (Math.random() > 0.5 ? 1 : -1) * CFG.speed;
         let canChange = true;
 
-        wrapper.style.left = `${x}px`;
-        wrapper.style.top  = `${y}px`;
+        ssEl.style.cssText = `position:absolute;width:${CFG.size}px;height:${CFG.size}px;left:${x}px;top:${y}px;background-image:url(${IMAGES[imgIdx]});background-size:contain;background-position:center;background-repeat:no-repeat;pointer-events:none;z-index:0;`;
 
-        // ── Rotación objetivo ─────────────────────────────────────────────────────
-        let targetRY = 0;
-        let targetRX = 0;
-        let lerpedRY = 0;
-        let lerpedRX = 0;
-        let elapsed  = 0;
+        const nextImg = () => {
+          imgIdx = (imgIdx + 1) % IMAGES.length;
+          if (ssEl) ssEl.style.backgroundImage = `url(${IMAGES[imgIdx]})`;
+        };
 
         const step = () => {
-          if (!wrapper?.parentNode) return;
+          if (!ssEl?.parentNode) return;
+          const rect = root.getBoundingClientRect();
           x += vx;
           y += vy;
-          elapsed += 0.016;
 
-          const L = 0;
-          const R = root.offsetWidth  - CFG.size;
-          const T = 0;
-          const B = root.offsetHeight - CFG.size;
+          const L = CFG.edgeOffset;
+          const R = rect.width  - CFG.size + Math.abs(CFG.edgeOffset);
+          const T = CFG.edgeOffset;
+          const B = rect.height - CFG.size + Math.abs(CFG.edgeOffset);
 
           if ((x <= L || x >= R) && canChange) {
             vx = -vx;
             x = x <= L ? L : R;
-            if (modelsReady) swapModel();
+            nextImg();
             canChange = false;
             setTimeout(() => { canChange = true; }, CFG.changeDelay);
           }
@@ -212,21 +144,13 @@ import Menu from "@/components/Menu.astro";
           if ((y <= T || y >= B) && canChange) {
             vy = -vy;
             y = y <= T ? T : B;
-            if (modelsReady) swapModel();
+            nextImg();
             canChange = false;
             setTimeout(() => { canChange = true; }, CFG.changeDelay);
           }
 
-          wrapper!.style.left = `${x}px`;
-          wrapper!.style.top  = `${y}px`;
-
-          // Rotación suave hacia el ángulo objetivo
-          lerpedRY = gsap.utils.interpolate(lerpedRY, targetRY, 0.03);
-          lerpedRX = gsap.utils.interpolate(lerpedRX, targetRX, 0.03);
-          monitorGroup.rotation.y = lerpedRY;
-          monitorGroup.rotation.x = lerpedRX + Math.sin(elapsed * 0.6) * 0.04;
-
-          threeRenderer!.render(scene, camera);
+          ssEl!.style.left = `${x}px`;
+          ssEl!.style.top  = `${y}px`;
           rId = requestAnimationFrame(step);
         };
 
@@ -310,6 +234,7 @@ import Menu from "@/components/Menu.astro";
         if (sessionStorage.getItem("__preloaderDone")) {
           gsap.delayedCall(0.15, animateGroups);
         } else {
+          // First direct visit to /contacto — bootstrap the animation system
           sessionStorage.setItem("__preloaderDone", "1");
           window.dispatchEvent(new Event("preloaderDone"));
           gsap.delayedCall(0.15, animateGroups);
