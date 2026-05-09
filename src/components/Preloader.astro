@@ -28,13 +28,7 @@ const imgs = Array.from({ length: 12 }, (_, i) => i + 1);
   <!-- Modal del showreel — se expande desde el recuadro -->
   <div id="showreel-modal">
     <button class="showreel-close" aria-label="Cerrar">✕</button>
-    <video
-      id="showreel-video"
-      src={showreelSrc}
-      playsinline
-      loop
-      poster={imgs.length ? `/img1.jpg` : ""}
-    ></video>
+    <iframe id="showreel-frame" src="" frameborder="0"></iframe>
   </div>
 </div>
 
@@ -50,14 +44,20 @@ const imgs = Array.from({ length: 12 }, (_, i) => i + 1);
 
   // ── Lógica del showreel (compartida entre primera carga y recargas) ──────────
   const setupShowreel = () => {
-    const modal = document.getElementById("showreel-modal") as HTMLElement;
-    const video = document.getElementById("showreel-video") as HTMLVideoElement;
+    const modal    = document.getElementById("showreel-modal") as HTMLElement;
+    const frame    = document.getElementById("showreel-frame") as HTMLIFrameElement;
     const closeBtn = modal.querySelector(".showreel-close") as HTMLElement;
 
     lastImg.addEventListener("click", () => {
       const rect = lastImg.getBoundingClientRect();
+
+      // Empieza a cargar la página mientras se anima
+      frame.src = "/contacto";
+      gsap.set(frame,    { opacity: 0 });
+      gsap.set(closeBtn, { opacity: 0 });
       gsap.set(modal, {
         display: "flex",
+        background: "#ebe9e5",
         left: rect.left,
         top: rect.top,
         width: rect.width,
@@ -65,31 +65,35 @@ const imgs = Array.from({ length: 12 }, (_, i) => i + 1);
         borderRadius: "0.5rem",
         pointerEvents: "auto",
       });
+
       gsap.to(modal, {
-        left: 0,
-        top: 0,
-        width: "100vw",
-        height: "100vh",
+        left: 0, top: 0,
+        width: "100vw", height: "100vh",
         borderRadius: 0,
         duration: 0.75,
         ease: "expo.inOut",
-        onComplete: () => { if (video.src) video.play(); },
+        onComplete: () => {
+          // Muestra el iframe y el botón solo cuando el modal llena la pantalla
+          gsap.to(frame,    { opacity: 1, duration: 0.3 });
+          gsap.to(closeBtn, { opacity: 1, duration: 0.3, delay: 0.1 });
+        },
       });
     });
 
     closeBtn.addEventListener("click", () => {
-      video.pause();
-      video.currentTime = 0;
       const rect = lastImg.getBoundingClientRect();
+      gsap.to([frame, closeBtn], { opacity: 0, duration: 0.2 });
       gsap.to(modal, {
-        left: rect.left,
-        top: rect.top,
-        width: rect.width,
-        height: rect.height,
+        left: rect.left, top: rect.top,
+        width: rect.width, height: rect.height,
         borderRadius: "0.5rem",
         duration: 0.6,
+        delay: 0.15,
         ease: "expo.inOut",
-        onComplete: () => { gsap.set(modal, { display: "none", pointerEvents: "none" }); },
+        onComplete: () => {
+          gsap.set(modal, { display: "none", pointerEvents: "none" });
+          frame.src = ""; // descarga el iframe para liberar recursos
+        },
       });
     });
   };
@@ -306,10 +310,11 @@ const imgs = Array.from({ length: 12 }, (_, i) => i + 1);
     overflow: hidden;
   }
 
-  #showreel-modal video {
+  #showreel-frame {
     width: 100%;
     height: 100%;
-    object-fit: cover;
+    border: none;
+    display: block;
   }
 
   .showreel-close {
@@ -318,17 +323,17 @@ const imgs = Array.from({ length: 12 }, (_, i) => i + 1);
     right: 1.5rem;
     background: none;
     border: none;
-    color: #fff;
+    color: #1a1a1a;
     font-size: 1.5rem;
     cursor: pointer;
     z-index: 10;
     line-height: 1;
     padding: 0.5rem;
-    opacity: 0.7;
+    opacity: 0;
     transition: opacity 0.2s;
   }
 
-  .showreel-close:hover { opacity: 1; }
+  .showreel-close:hover { opacity: 0.5; }
 
   @media (max-width: 768px) {
     .pl-counter {
