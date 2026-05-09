@@ -73,12 +73,11 @@ import Menu from "@/components/Menu.astro";
 
       // ── Screensaver ──────────────────────────────────────────────────────────────
       const IMAGES = Array.from({ length: 10 }, (_, i) => `/objects/obj-${i + 1}.png`);
-      const CFG = { speed: 3, size: 300, edgeOffset: -40, changeDelay: 20 };
+      const CFG = { speed: 1.2, size: 300, edgeOffset: -40, changeDelay: 20 };
 
       const root = document.getElementById("contact-root")!;
       let rId: number | null = null;
       let ssEl: HTMLElement | null = null;
-      let isDesktop = window.innerWidth >= 1024;
       let imgIdx = 0;
 
       const stopSS = () => {
@@ -88,7 +87,6 @@ import Menu from "@/components/Menu.astro";
       };
 
       const startSS = () => {
-        if (!isDesktop) return;
         stopSS();
 
         // Preload first image before appending
@@ -106,7 +104,7 @@ import Menu from "@/components/Menu.astro";
         let vy = (Math.random() > 0.5 ? 1 : -1) * CFG.speed;
         let canChange = true;
 
-        ssEl.style.cssText = `position:absolute;width:${CFG.size}px;height:${CFG.size}px;left:${x}px;top:${y}px;background-image:url(${IMAGES[imgIdx]});background-size:cover;background-position:center;pointer-events:none;z-index:0;opacity:0.75;box-shadow:0 8px 40px rgba(0,0,0,0.18);`;
+        ssEl.style.cssText = `position:absolute;width:${CFG.size}px;height:${CFG.size}px;left:${x}px;top:${y}px;background-image:url(${IMAGES[imgIdx]});background-size:contain;background-position:center;background-repeat:no-repeat;pointer-events:none;z-index:0;`;
 
         const nextImg = () => {
           imgIdx = (imgIdx + 1) % IMAGES.length;
@@ -147,13 +145,6 @@ import Menu from "@/components/Menu.astro";
 
         rId = requestAnimationFrame(step);
       };
-
-      window.addEventListener("resize", () => {
-        const was = isDesktop;
-        isDesktop = window.innerWidth >= 1024;
-        if (isDesktop && !was) startSS();
-        else if (!isDesktop && was) stopSS();
-      });
 
       startSS();
 
