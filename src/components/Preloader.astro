@@ -1,8 +1,4 @@
 ---
-interface Props {
-  showreelSrc?: string;
-}
-const { showreelSrc = "" } = Astro.props;
 const imgs = Array.from({ length: 12 }, (_, i) => i + 1);
 ---
 
@@ -28,7 +24,7 @@ const imgs = Array.from({ length: 12 }, (_, i) => i + 1);
   <!-- Modal del showreel — se expande desde el recuadro -->
   <div id="showreel-modal">
     <button class="showreel-close" aria-label="Cerrar">✕</button>
-    <iframe id="showreel-frame" src="" frameborder="0"></iframe>
+    <iframe id="showreel-frame" src=""></iframe>
   </div>
 </div>
 
@@ -47,33 +43,54 @@ const imgs = Array.from({ length: 12 }, (_, i) => i + 1);
     const modal    = document.getElementById("showreel-modal") as HTMLElement;
     const frame    = document.getElementById("showreel-frame") as HTMLIFrameElement;
     const closeBtn = modal.querySelector(".showreel-close") as HTMLElement;
+    const nav      = document.querySelector("nav") as HTMLElement | null;
+
+    // 1.5rem en px (base 16px)
+    const GAP = parseFloat(getComputedStyle(document.documentElement).fontSize) * 1.5;
 
     lastImg.addEventListener("click", () => {
-      const rect = lastImg.getBoundingClientRect();
+      const rect      = lastImg.getBoundingClientRect();
+      const desktop   = window.innerWidth >= 1024;
 
-      // Empieza a cargar la página mientras se anima
+      // Oculta el menú del padre en mobile para que no aparezca sobre el modal
+      if (!desktop && nav) nav.style.visibility = "hidden";
+
       frame.src = "/contacto";
       gsap.set(frame,    { opacity: 0 });
       gsap.set(closeBtn, { opacity: 0 });
       gsap.set(modal, {
         display: "flex",
-        background: "#ebe9e5",
+        background: "#1a1a1a",
         left: rect.left,
         top: rect.top,
         width: rect.width,
         height: rect.height,
-        borderRadius: "0.5rem",
+        borderRadius: "0.75rem",
         pointerEvents: "auto",
       });
 
+      // Desktop: 2/5 del ancho, márgenes iguales a los del thumbnail (derecha + arriba + abajo)
+      // Mobile: pantalla completa sin bordes
+      const target = desktop
+        ? {
+            left:         window.innerWidth * 0.6,
+            top:          GAP,
+            width:        window.innerWidth * 0.4 - GAP,
+            height:       window.innerHeight - GAP * 2,
+            borderRadius: "1.25rem",
+          }
+        : {
+            left: 0, top: 0,
+            width:  window.innerWidth,
+            height: window.innerHeight,
+            borderRadius: 0,
+          };
+
       gsap.to(modal, {
-        left: 0, top: 0,
-        width: "100vw", height: "100vh",
-        borderRadius: 0,
+        ...target,
         duration: 0.75,
         ease: "expo.inOut",
         onComplete: () => {
-          // Muestra el iframe y el botón solo cuando el modal llena la pantalla
           gsap.to(frame,    { opacity: 1, duration: 0.3 });
           gsap.to(closeBtn, { opacity: 1, duration: 0.3, delay: 0.1 });
         },
@@ -82,6 +99,7 @@ const imgs = Array.from({ length: 12 }, (_, i) => i + 1);
 
     closeBtn.addEventListener("click", () => {
       const rect = lastImg.getBoundingClientRect();
+      if (nav) nav.style.visibility = "";
       gsap.to([frame, closeBtn], { opacity: 0, duration: 0.2 });
       gsap.to(modal, {
         left: rect.left, top: rect.top,
@@ -92,7 +110,7 @@ const imgs = Array.from({ length: 12 }, (_, i) => i + 1);
         ease: "expo.inOut",
         onComplete: () => {
           gsap.set(modal, { display: "none", pointerEvents: "none" });
-          frame.src = ""; // descarga el iframe para liberar recursos
+          frame.src = "";
         },
       });
     });
@@ -323,7 +341,7 @@ const imgs = Array.from({ length: 12 }, (_, i) => i + 1);
     right: 1.5rem;
     background: none;
     border: none;
-    color: #1a1a1a;
+    color: #f0f0f0;
     font-size: 1.5rem;
     cursor: pointer;
     z-index: 10;

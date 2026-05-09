@@ -10,7 +10,7 @@ import Menu from "@/components/Menu.astro";
     <BaseHead />
     <title>Contacto — No Brand Studio</title>
   </head>
-  <body class="font-sans bg-sand">
+  <body class="font-sans" style="background:#1a1a1a;">
     <PageTransition />
     <Menu />
 
@@ -159,9 +159,15 @@ import Menu from "@/components/Menu.astro";
         });
       };
 
+      // Si carga dentro del modal (iframe): sin scroll y sin menú propio
+      if (window !== window.parent) {
+        document.body.style.overflow = "hidden";
+        document.documentElement.style.overflow = "hidden";
+        const nav = document.querySelector("nav");
+        if (nav) nav.style.display = "none";
+      }
+
       // ── Trigger animations: page-load or direct visit ────────────────────────────
-      // Using Promise.resolve ensures PageTransition's preloaderDone listener
-      // is registered before we fire the event (both are deferred module scripts).
       Promise.resolve().then(() => {
         if (sessionStorage.getItem("__preloaderDone")) {
           gsap.delayedCall(0.15, animateGroups);
@@ -210,7 +216,7 @@ import Menu from "@/components/Menu.astro";
         font-size: clamp(2rem, 3.5vw, 3.5rem);
         font-weight: 500;
         line-height: 1.1;
-        color: var(--color-base-900);
+        color: var(--color-base-50);
       }
 
       /* ── Contact groups (focus / base / credits) ────────────────── */
@@ -222,11 +228,11 @@ import Menu from "@/components/Menu.astro";
         font-size: 0.78rem;
         text-transform: uppercase;
         letter-spacing: 0.04em;
-        color: var(--color-base-700);
+        color: var(--color-base-300);
       }
 
       .contact-group .label {
-        color: var(--color-base-400);
+        color: var(--color-base-500);
         font-size: 0.7rem;
         margin-bottom: 0.35rem;
       }
@@ -237,7 +243,7 @@ import Menu from "@/components/Menu.astro";
         font-size: 0.78rem;
         text-transform: uppercase;
         letter-spacing: 0.04em;
-        color: var(--color-base-900);
+        color: var(--color-base-100);
         text-decoration: none;
         display: inline-block;
         position: relative;
@@ -287,7 +293,7 @@ import Menu from "@/components/Menu.astro";
       }
 
       a.sm { transition: color 0.2s ease; }
-      a.sm:hover { color: var(--color-base-900); }
+      a.sm:hover { color: var(--color-base-100); }
 
       /* data-anim elements start hidden — GSAP reveals them */
       [data-anim] { opacity: 0; }
