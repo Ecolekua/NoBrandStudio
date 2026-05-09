@@ -1,0 +1,341 @@
+---
+import "@/styles/global.css";
+import BaseHead from "@/components/studio/fundations/head/BaseHead.astro";
+import PageTransition from "@/components/PageTransition.astro";
+import Menu from "@/components/Menu.astro";
+---
+
+<html lang="es" class="scroll-smooth">
+  <head>
+    <BaseHead />
+    <title>Contacto — No Brand Studio</title>
+  </head>
+  <body class="font-sans bg-sand">
+    <PageTransition />
+    <Menu />
+
+    <main>
+      <section id="contact-root">
+
+        <div class="contact-copy">
+
+          <div class="contact-col">
+            <h2 data-split="lines">No brand,<br />full intention.</h2>
+          </div>
+
+          <div class="contact-col">
+
+            <div class="contact-group" data-anim data-delay="0.2">
+              <p class="label">Enfoque</p>
+              <p>Dirección Creativa</p>
+              <p>Identidad de Marca</p>
+              <p>Experiencia Digital</p>
+            </div>
+
+            <div class="contact-group" data-anim data-delay="0.45">
+              <p class="label">Base</p>
+              <p>Santiago, Chile</p>
+            </div>
+
+            <div class="contact-mail" data-anim data-delay="0.65">
+              <a href="mailto:hello@nobrandstudio.com">hello@nobrandstudio.com</a>
+            </div>
+
+            <div class="contact-group" data-anim data-delay="0.85">
+              <p class="label">Estudio</p>
+              <p>No Brand Studio</p>
+              <p>© 2025</p>
+            </div>
+
+          </div>
+        </div>
+
+        <footer class="contact-footer" data-anim data-delay="1.05">
+          <div class="contact-footer-inner">
+            <p class="sm">Disponible para proyectos</p>
+            <div class="contact-socials">
+              <a class="sm" href="#_">LinkedIn</a>
+              <a class="sm" href="#_">GitHub</a>
+              <a class="sm" href="#_">Arena</a>
+            </div>
+            <p class="sm">No Brand Studio</p>
+          </div>
+        </footer>
+
+      </section>
+    </main>
+
+    <script>
+      import gsap from "gsap";
+      import { SplitText } from "gsap/SplitText";
+
+      gsap.registerPlugin(SplitText);
+
+      // ── Screensaver ──────────────────────────────────────────────────────────────
+      const IMAGES = Array.from({ length: 10 }, (_, i) => `/objects/obj-${i + 1}.png`);
+      const CFG = { speed: 3, size: 300, edgeOffset: -40, changeDelay: 20 };
+
+      const root = document.getElementById("contact-root")!;
+      let rId: number | null = null;
+      let ssEl: HTMLElement | null = null;
+      let isDesktop = window.innerWidth >= 1024;
+      let imgIdx = 0;
+
+      const stopSS = () => {
+        if (rId !== null) { cancelAnimationFrame(rId); rId = null; }
+        ssEl?.remove();
+        ssEl = null;
+      };
+
+      const startSS = () => {
+        if (!isDesktop) return;
+        stopSS();
+
+        // Preload first image before appending
+        const first = new Image();
+        first.src = IMAGES[0];
+
+        ssEl = document.createElement("div");
+        ssEl.className = "screensaver-img";
+        root.appendChild(ssEl);
+
+        const r = root.getBoundingClientRect();
+        let x = r.width / 2 - CFG.size / 2;
+        let y = r.height / 2 - CFG.size / 2;
+        let vx = (Math.random() > 0.5 ? 1 : -1) * CFG.speed;
+        let vy = (Math.random() > 0.5 ? 1 : -1) * CFG.speed;
+        let canChange = true;
+
+        ssEl.style.cssText = `position:absolute;width:${CFG.size}px;height:${CFG.size}px;left:${x}px;top:${y}px;background-image:url(${IMAGES[imgIdx]});background-size:cover;background-position:center;pointer-events:none;z-index:0;opacity:0.75;box-shadow:0 8px 40px rgba(0,0,0,0.18);`;
+
+        const nextImg = () => {
+          imgIdx = (imgIdx + 1) % IMAGES.length;
+          if (ssEl) ssEl.style.backgroundImage = `url(${IMAGES[imgIdx]})`;
+        };
+
+        const step = () => {
+          if (!ssEl?.parentNode) return;
+          const rect = root.getBoundingClientRect();
+          x += vx;
+          y += vy;
+
+          const L = CFG.edgeOffset;
+          const R = rect.width  - CFG.size + Math.abs(CFG.edgeOffset);
+          const T = CFG.edgeOffset;
+          const B = rect.height - CFG.size + Math.abs(CFG.edgeOffset);
+
+          if ((x <= L || x >= R) && canChange) {
+            vx = -vx;
+            x = x <= L ? L : R;
+            nextImg();
+            canChange = false;
+            setTimeout(() => { canChange = true; }, CFG.changeDelay);
+          }
+
+          if ((y <= T || y >= B) && canChange) {
+            vy = -vy;
+            y = y <= T ? T : B;
+            nextImg();
+            canChange = false;
+            setTimeout(() => { canChange = true; }, CFG.changeDelay);
+          }
+
+          ssEl!.style.left = `${x}px`;
+          ssEl!.style.top  = `${y}px`;
+          rId = requestAnimationFrame(step);
+        };
+
+        rId = requestAnimationFrame(step);
+      };
+
+      window.addEventListener("resize", () => {
+        const was = isDesktop;
+        isDesktop = window.innerWidth >= 1024;
+        if (isDesktop && !was) startSS();
+        else if (!isDesktop && was) stopSS();
+      });
+
+      startSS();
+
+      // ── Animate contact groups ───────────────────────────────────────────────────
+      const animateGroups = () => {
+        document.querySelectorAll<HTMLElement>("[data-anim]").forEach((el) => {
+          const delay = parseFloat(el.dataset.delay ?? "0.1");
+          gsap.fromTo(el,
+            { autoAlpha: 0, y: 18 },
+            { autoAlpha: 1, y: 0, duration: 0.75, delay, ease: "power3.out" }
+          );
+        });
+      };
+
+      // ── Trigger animations: page-load or direct visit ────────────────────────────
+      // Using Promise.resolve ensures PageTransition's preloaderDone listener
+      // is registered before we fire the event (both are deferred module scripts).
+      Promise.resolve().then(() => {
+        if (sessionStorage.getItem("__preloaderDone")) {
+          gsap.delayedCall(0.15, animateGroups);
+        } else {
+          // First direct visit to /contacto — bootstrap the animation system
+          sessionStorage.setItem("__preloaderDone", "1");
+          window.dispatchEvent(new Event("preloaderDone"));
+          gsap.delayedCall(0.15, animateGroups);
+        }
+      });
+    </script>
+
+    <style>
+      /* ── Section container ──────────────────────────────────────── */
+      #contact-root {
+        position: relative;
+        width: 100vw;
+        height: 100svh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        overflow: hidden;
+      }
+
+      /* ── Two-column content area ────────────────────────────────── */
+      .contact-copy {
+        position: relative;
+        z-index: 1;
+        width: 75%;
+        max-width: 2000px;
+        display: flex;
+        gap: 2rem;
+        padding: 0 2rem;
+      }
+
+      .contact-col:first-child { flex: 3; }
+      .contact-col:last-child {
+        flex: 2;
+        display: flex;
+        flex-direction: column;
+        gap: 2rem;
+      }
+
+      .contact-col h2 {
+        width: 65%;
+        font-size: clamp(2rem, 3.5vw, 3.5rem);
+        font-weight: 500;
+        line-height: 1.1;
+        color: var(--color-base-900);
+      }
+
+      /* ── Contact groups (focus / base / credits) ────────────────── */
+      .contact-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.15rem;
+        font-family: var(--font-mono);
+        font-size: 0.78rem;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: var(--color-base-700);
+      }
+
+      .contact-group .label {
+        color: var(--color-base-400);
+        font-size: 0.7rem;
+        margin-bottom: 0.35rem;
+      }
+
+      /* ── Email link ─────────────────────────────────────────────── */
+      .contact-mail a {
+        font-family: var(--font-mono);
+        font-size: 0.78rem;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: var(--color-base-900);
+        text-decoration: none;
+        display: inline-block;
+        position: relative;
+      }
+
+      .contact-mail a::after {
+        content: "";
+        position: absolute;
+        bottom: -2px;
+        left: 0;
+        width: 100%;
+        height: 1px;
+        background: currentColor;
+        transform: scaleX(0);
+        transform-origin: left;
+        transition: transform 0.4s ease;
+      }
+
+      .contact-mail a:hover::after { transform: scaleX(1); }
+
+      /* ── Footer (absolute at bottom) ───────────────────────────── */
+      .contact-footer {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        z-index: 1;
+      }
+
+      .contact-footer-inner {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        padding: 2rem;
+      }
+
+      .contact-socials { display: flex; gap: 2rem; }
+
+      .sm {
+        font-family: var(--font-mono);
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--color-base-500);
+        text-decoration: none;
+        display: inline-block;
+      }
+
+      a.sm { transition: color 0.2s ease; }
+      a.sm:hover { color: var(--color-base-900); }
+
+      /* data-anim elements start hidden — GSAP reveals them */
+      [data-anim] { opacity: 0; }
+
+      /* ── Mobile ─────────────────────────────────────────────────── */
+      @media (max-width: 1023px) {
+        #contact-root {
+          height: auto;
+          min-height: 150svh;
+          padding: 8rem 0 6rem;
+          align-items: flex-start;
+        }
+
+        .contact-copy {
+          flex-direction: column;
+          width: 100%;
+          gap: 3rem;
+          padding: 1.25rem;
+        }
+
+        .contact-col h2 { width: 90%; }
+
+        .contact-footer {
+          position: relative;
+          padding-bottom: 2rem;
+        }
+
+        .contact-footer-inner {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 0.5rem;
+          padding: 1.25rem;
+        }
+
+        .contact-socials {
+          flex-direction: column;
+          gap: 0.5rem;
+        }
+      }
+    </style>
+  </body>
+</html>
