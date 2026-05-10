@@ -1,0 +1,469 @@
+---
+import "@/styles/global.css";
+import BaseHead from "@/components/studio/fundations/head/BaseHead.astro";
+import PageTransition from "@/components/PageTransition.astro";
+import Menu from "@/components/Menu.astro";
+
+const slides = [
+  { title: "Serres",         meta: "Document Platform · 2026"   },
+  { title: "Estudio Larco",  meta: "Digital Experience · 2026"  },
+  { title: "Heel",           meta: "Visual Sanitation · 2026"   },
+  { title: "Producciones19", meta: "Interactive Events · 2026"  },
+  { title: "3D Visual Lab",  meta: "Visualization · 2026"       },
+];
+---
+
+<html lang="es" class="scroll-smooth">
+  <head>
+    <BaseHead />
+    <title>Labs — No Brand Studio</title>
+  </head>
+  <body>
+    <PageTransition />
+    <Menu />
+
+    <main id="labs-root">
+      <div id="labs-canvas-wrap"></div>
+
+      <div class="slides-wrap" id="slides-wrap">
+        {slides.map((s, i) => (
+          <div
+            class:list={["slide", i === 0 ? "is-active show-meta" : "is-next"]}
+            data-index={i}
+          >
+            <p class="slide-meta">{s.meta}</p>
+            <h2 class="slide-title">{s.title}</h2>
+          </div>
+        ))}
+      </div>
+
+      <footer class="labs-footer">
+        <span class="labs-counter">
+          <span id="labs-current">01</span> / {String(slides.length).padStart(2, "0")}
+        </span>
+        <span class="labs-hint">drag to explore</span>
+      </footer>
+    </main>
+
+    <script>
+      import * as THREE from "three";
+      import gsap from "gsap";
+
+      // ── Images (public/) ─────────────────────────────────────────────────────
+      const IMAGES = ["/img2.jpg", "/img3.jpg", "/img4.jpg", "/img5.jpg", "/img6.jpg"];
+      const N = IMAGES.length;
+
+      // ── Vertex shader (sticky wave) ──────────────────────────────────────────
+      const vertexShader = `
+        uniform float u_progress;
+        uniform float u_direction;
+        uniform float u_offset;
+        uniform float u_time;
+        uniform float u_waveIntensity;
+        varying vec2 vUv;
+        void main() {
+          vec3 pos = position.xyz;
+          float dist = length(uv.xy - 0.5);
+          float sizeDist = length(vec2(0.5, 0.5));
+          float nd = dist / sizeDist;
+          float stickEffect = mix(nd, -nd, u_direction);
+          float stick = 0.5;
+          float wIn  = u_progress * (1.0 / stick);
+          float wOut = -(u_progress - 1.0) * (1.0 / (1.0 - stick));
+          wOut = pow(smoothstep(0.0, 1.0, wOut), 0.7);
+          float stickProgress  = min(wIn, wOut);
+          float offsetProgress = mix(clamp(wIn, 0.0, 1.0), clamp(1.0 - wOut, 0.0, 1.0), u_direction);
+          pos.z += stickEffect * u_offset * stickProgress - u_offset * offsetProgress;
+          pos.z += sin(dist * 8.0 - u_time * 2.0) * u_waveIntensity;
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
+          vUv = uv;
+        }
+      `;
+
+      // ── Fragment shader (RGB chromatic aberration crossfade) ─────────────────
+      const fragmentShader = `
+        uniform sampler2D u_texture;
+        uniform sampler2D u_texture2;
+        uniform vec2 u_textureFactor;
+        uniform vec2 u_texture2Factor;
+        uniform float u_textureProgress;
+        uniform vec2 u_resolution;
+        uniform vec2 u_rgbPosition;
+        uniform vec2 u_rgbVelocity;
+        varying vec2 vUv;
+        vec2 cover(vec2 uvs, vec2 factor) {
+          return uvs * factor - factor / 2.0 + 0.5;
+        }
+        void main() {
+          vec2 normPos = u_rgbPosition / u_resolution;
+          normPos.y = 1.0 - normPos.y;
+          float dist  = distance(normPos + u_rgbVelocity / u_resolution, vUv.xy);
+          float ratio = clamp(1.0 - dist * 5.0, 0.0, 1.0);
+          vec2 vel = u_rgbVelocity;
+          vec2 uv  = vUv;
+          uv.x -= sin(uv.y) * ratio / 100.0 * (vel.x + vel.y) / 7.0;
+          uv.y -= sin(uv.x) * ratio / 100.0 * (vel.x + vel.y) / 7.0;
+          vec4 c1; vec4 c2;
+          c1.r = texture2D(u_texture,  cover(uv, u_textureFactor)).r;
+          c2.r = texture2D(u_texture2, cover(uv, u_texture2Factor)).r;
+          uv.x -= sin(uv.y) * ratio / 150.0 * (vel.x + vel.y) / 7.0;
+          uv.y -= sin(uv.x) * ratio / 150.0 * (vel.x + vel.y) / 7.0;
+          c1.g = texture2D(u_texture,  cover(uv, u_textureFactor)).g;
+          c2.g = texture2D(u_texture2, cover(uv, u_texture2Factor)).g;
+          uv.x -= sin(uv.y) * ratio / 300.0 * (vel.x + vel.y) / 7.0;
+          uv.y -= sin(uv.x) * ratio / 300.0 * (vel.x + vel.y) / 7.0;
+          c1.b = texture2D(u_texture,  cover(uv, u_textureFactor)).b;
+          c2.b = texture2D(u_texture2, cover(uv, u_texture2Factor)).b;
+          c1.a = 1.0; c2.a = 1.0;
+          gl_FragColor = mix(c1, c2, u_textureProgress);
+        }
+      `;
+
+      // ── Three.js setup ───────────────────────────────────────────────────────
+      const canvasWrap = document.getElementById("labs-canvas-wrap") as HTMLElement;
+
+      const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+      canvasWrap.appendChild(renderer.domElement);
+
+      const scene  = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+      camera.position.z = 5;
+
+      const getViewSize = () => {
+        const fov = (camera.fov * Math.PI) / 180;
+        return Math.abs(camera.position.z * Math.tan(fov / 2) * 2);
+      };
+      const getPlaneSize = () => {
+        const v = getViewSize();
+        return { width: v * 1.5, height: v };
+      };
+      const calcFactor = (imgW: number, imgH: number) => {
+        const { width, height } = getPlaneSize();
+        const winRatio  = window.innerWidth / window.innerHeight;
+        const rectRatio = (width / height) * winRatio;
+        const imgRatio  = imgW / imgH;
+        return rectRatio > imgRatio
+          ? new THREE.Vector2(1, (1 / rectRatio) * imgRatio)
+          : new THREE.Vector2(rectRatio / imgRatio, 1);
+      };
+
+      // Textures + factors
+      const factors   = IMAGES.map(() => new THREE.Vector2(1, 1));
+      const textures  = IMAGES.map((src, i) =>
+        new THREE.TextureLoader().load(src, (t: THREE.Texture) => {
+          factors[i] = calcFactor(t.image.width, t.image.height);
+          if (i === 0) {
+            uniforms.u_textureFactor.value  = factors[0];
+            uniforms.u_texture2Factor.value = factors[0];
+          }
+          doRender();
+        })
+      );
+
+      // Plane geometry + shader material
+      const { width: pw, height: ph } = getPlaneSize();
+      const geometry = new THREE.PlaneGeometry(pw, ph, 60, 60);
+      const uniforms = {
+        u_texture:         { value: textures[0] },
+        u_texture2:        { value: textures[0] },
+        u_textureFactor:   { value: new THREE.Vector2(1, 1) },
+        u_texture2Factor:  { value: new THREE.Vector2(1, 1) },
+        u_textureProgress: { value: 0 },
+        u_offset:          { value: 8 },
+        u_progress:        { value: 0 },
+        u_direction:       { value: 1 },
+        u_waveIntensity:   { value: 0 },
+        u_time:            { value: 0 },
+        u_resolution:      { value: new THREE.Vector2(window.innerWidth, window.innerHeight) },
+        u_rgbPosition:     { value: new THREE.Vector2(window.innerWidth / 2, window.innerHeight / 2) },
+        u_rgbVelocity:     { value: new THREE.Vector2(0, 0) },
+      };
+      const material = new THREE.ShaderMaterial({ uniforms, vertexShader, fragmentShader, side: THREE.DoubleSide });
+      const mesh     = new THREE.Mesh(geometry, material);
+      scene.add(mesh);
+
+      const doRender = () => renderer.render(scene, camera);
+
+      // ── Slides DOM ────────────────────────────────────────────────────────────
+      const slidesWrap = document.getElementById("slides-wrap") as HTMLElement;
+      const slideEls   = Array.from(slidesWrap.querySelectorAll<HTMLElement>(".slide"));
+      const counterEl  = document.getElementById("labs-current") as HTMLElement;
+
+      let activeIndex = 0;
+      let indexCurrent = 0;
+      let indexTarget  = 0;
+
+      const updateSlideClasses = (newIdx: number) => {
+        slideEls.forEach((el, j) => {
+          el.classList.remove("is-active", "is-prev", "is-next");
+          if      (j === newIdx) el.classList.add("is-active");
+          else if (j < newIdx)   el.classList.add("is-prev");
+          else                   el.classList.add("is-next");
+        });
+      };
+
+      const setActiveIndex = (newIdx: number) => {
+        if (newIdx === activeIndex) return;
+        const fromIdx = activeIndex;
+        activeIndex   = newIdx;
+        counterEl.textContent = String(newIdx + 1).padStart(2, "0");
+        updateSlideClasses(newIdx);
+
+        // Texture crossfade
+        uniforms.u_texture.value         = textures[fromIdx];
+        uniforms.u_textureFactor.value   = factors[fromIdx];
+        uniforms.u_texture2.value        = textures[newIdx];
+        uniforms.u_texture2Factor.value  = factors[newIdx];
+        gsap.killTweensOf(uniforms.u_textureProgress);
+        uniforms.u_textureProgress.value = 0;
+        gsap.to(uniforms.u_textureProgress, { value: 1, duration: 0.8, ease: "power3.out" });
+      };
+
+      // ── Stick physics (GSAP instead of popmotion) ─────────────────────────────
+      const stick = { progress: 0, direction: 1, waveIntensity: 0 };
+      const updateStick = () => {
+        uniforms.u_progress.value      = stick.progress;
+        uniforms.u_direction.value     = stick.direction;
+        uniforms.u_waveIntensity.value = stick.waveIntensity;
+      };
+
+      // ── RGB follower state ────────────────────────────────────────────────────
+      let mouseX    = window.innerWidth  / 2;
+      let mouseY    = window.innerHeight / 2;
+      let followerX = mouseX;
+      let followerY = mouseY;
+
+      window.addEventListener("mousemove", (e) => {
+        mouseX = e.clientX;
+        mouseY = e.clientY;
+      });
+
+      // ── rAF loop (always on for smooth RGB) ──────────────────────────────────
+      let time = 0;
+      const loop = () => {
+        time += 0.1;
+        uniforms.u_time.value = time;
+
+        // Lerp slide container
+        indexCurrent += (indexTarget - indexCurrent) * 0.1;
+        slidesWrap.style.transform = `translateY(${(indexCurrent * 100) / N}%)`;
+
+        // Lerp RGB follower
+        const vx = (mouseX - followerX) * 0.08;
+        const vy = (mouseY - followerY) * 0.08;
+        followerX += vx;
+        followerY += vy;
+        uniforms.u_rgbPosition.value.set(followerX, followerY);
+        uniforms.u_rgbVelocity.value.set(vx, vy);
+
+        doRender();
+        requestAnimationFrame(loop);
+      };
+      requestAnimationFrame(loop);
+
+      // ── Drag interaction ──────────────────────────────────────────────────────
+      const SCROLL_SIZE = window.innerHeight / 6;
+      let dragStart: number | null = null;
+      let dragInitialTarget = 0;
+      let isDragging = false;
+
+      const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v));
+
+      const onDragStart = (y: number) => {
+        dragStart         = y;
+        dragInitialTarget = indexTarget;
+        isDragging        = true;
+        slideEls[activeIndex]?.classList.remove("show-meta");
+        slidesWrap.classList.add("is-dragging");
+        document.body.style.cursor = "grabbing";
+
+        gsap.killTweensOf(stick);
+        stick.direction = 0;
+        gsap.to(stick, { progress: 1,   duration: 1.2, ease: "power2.out",  onUpdate: updateStick });
+        gsap.to(stick, { waveIntensity: 0.5, duration: 1.5, ease: "power3.out", onUpdate: updateStick });
+      };
+
+      const onDragMove = (y: number) => {
+        if (!isDragging || dragStart === null) return;
+        const delta = y - dragStart;
+        indexTarget  = clamp(dragInitialTarget + delta / SCROLL_SIZE, -(N - 1), 0);
+        const i      = clamp(Math.round(-indexTarget), 0, N - 1);
+        if (i !== activeIndex) setActiveIndex(i);
+      };
+
+      const onDragEnd = () => {
+        if (!isDragging) return;
+        isDragging = false;
+        dragStart  = null;
+        indexTarget = -activeIndex;
+        slideEls[activeIndex]?.classList.add("show-meta");
+        slidesWrap.classList.remove("is-dragging");
+        document.body.style.cursor = "";
+
+        gsap.killTweensOf(stick);
+        gsap.to(stick, { progress: 0,        duration: 0.9,  ease: "back.out(1.2)",  onUpdate: updateStick });
+        gsap.to(stick, { waveIntensity: 0,   duration: 0.35, ease: "power2.out",     onUpdate: updateStick });
+        gsap.to(stick, { direction: 1,       duration: 0.1,                          onUpdate: updateStick });
+      };
+
+      // Mouse events — skip if target is nav/link
+      window.addEventListener("mousedown", (e) => {
+        if ((e.target as HTMLElement).closest("a, button, nav")) return;
+        onDragStart(e.clientY);
+      });
+      window.addEventListener("mousemove", (e) => { if (isDragging) onDragMove(e.clientY); });
+      window.addEventListener("mouseup",   () => onDragEnd());
+
+      // Touch events
+      window.addEventListener("touchstart", (e) => {
+        if ((e.target as HTMLElement).closest("a, button, nav")) return;
+        onDragStart(e.touches[0].clientY);
+      }, { passive: true });
+      window.addEventListener("touchmove", (e) => {
+        if (isDragging) onDragMove(e.touches[0].clientY);
+      }, { passive: true });
+      window.addEventListener("touchend", () => onDragEnd());
+
+      // ── Resize ───────────────────────────────────────────────────────────────
+      window.addEventListener("resize", () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        uniforms.u_resolution.value.set(window.innerWidth, window.innerHeight);
+        textures.forEach((tex, i) => {
+          if (tex.image) factors[i] = calcFactor(tex.image.width, tex.image.height);
+        });
+        uniforms.u_textureFactor.value  = factors[activeIndex];
+        uniforms.u_texture2Factor.value = factors[activeIndex];
+        doRender();
+      });
+    </script>
+
+    <style>
+      body {
+        background: #0e0e0e;
+        overflow: hidden;
+        cursor: grab;
+      }
+
+      #labs-root {
+        position: fixed;
+        inset: 0;
+        overflow: hidden;
+      }
+
+      /* Canvas fills the viewport behind everything */
+      #labs-canvas-wrap {
+        position: absolute;
+        inset: 0;
+        z-index: 0;
+      }
+
+      #labs-canvas-wrap canvas {
+        display: block;
+        user-select: none;
+        -webkit-user-select: none;
+      }
+
+      /* ── Slides overlay ─────────────────────────────────────────────── */
+      .slides-wrap {
+        position: absolute;
+        top: 50%;
+        left: 10vw;
+        width: 80vw;
+        z-index: 1;
+        pointer-events: none;
+        will-change: transform;
+        mix-blend-mode: difference;
+      }
+
+      .slide {
+        box-sizing: border-box;
+        display: flex;
+        flex-direction: column;
+        gap: 0.6rem;
+        height: 33vh;
+        transform: translateY(-50%);
+        transition:
+          transform 1.3s cubic-bezier(0.2, 1, 0.3, 1),
+          opacity   0.5s cubic-bezier(0.2, 1, 0.3, 1);
+      }
+
+      .slide-meta {
+        margin: 0;
+        font-family: var(--font-mono);
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: #fff;
+        opacity: 0;
+        transition: opacity 0.9s cubic-bezier(0.2, 1, 0.3, 1);
+      }
+
+      .show-meta .slide-meta {
+        opacity: 1;
+        transition: opacity 1.5s 0.3s cubic-bezier(0.2, 1, 0.3, 1);
+      }
+
+      .slide-title {
+        margin: 0;
+        font-family: var(--font-sans);
+        font-size: clamp(3rem, 8vw, 8rem);
+        font-weight: 500;
+        letter-spacing: -0.03em;
+        line-height: 0.9;
+        color: #fff;
+      }
+
+      .is-prev {
+        opacity: 0;
+        transform: translateY(-85%);
+      }
+
+      .is-next {
+        opacity: 0;
+        transform: translateY(-15%);
+      }
+
+      /* During drag — all slides visible at center, container moves */
+      .slides-wrap.is-dragging .slide {
+        opacity: 1;
+        transform: translateY(-50%);
+      }
+
+      /* ── Footer ────────────────────────────────────────────────────── */
+      .labs-footer {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        padding: 2rem 2.5rem;
+        z-index: 2;
+        pointer-events: none;
+      }
+
+      .labs-counter,
+      .labs-hint {
+        font-family: var(--font-mono);
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: #fff;
+        mix-blend-mode: difference;
+      }
+
+      /* ── Mobile ─────────────────────────────────────────────────────── */
+      @media (max-width: 768px) {
+        .slides-wrap { left: 6vw; width: 88vw; }
+        .slide-title { font-size: clamp(2.5rem, 11vw, 4.5rem); }
+        .labs-footer { padding: 1.5rem; }
+        .labs-hint { display: none; }
+      }
+    </style>
+  </body>
+</html>

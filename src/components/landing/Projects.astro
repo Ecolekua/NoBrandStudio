@@ -4,40 +4,99 @@ import { Image } from "astro:assets";
 import one from "@/images/projects/one.png";
 import two from "@/images/projects/two.png";
 import three from "@/images/projects/three.png";
+// placeholder — reemplaza con la imagen real cuando esté disponible
+const four = one, five = two, six = three, seven = one, eight = two;
 // Fundations
 import Text from "@/components/fundations/elements/Text.astro";
 import Wrapper from "@/components/fundations/containers/Wrapper.astro";
 const featuredProjects = [
   {
-    year: "2026",
-    title: "Domestic Grid",
-    description:
-      "A modular home systems platform mapping energy, climate, and space constraints into actionable layouts, automation rules, and long-term upgrade paths.",
-    category: "Residential Systems Design",
-    image: one,
-    imageAlt:
-      "Modern home interior with overlaid system diagrams for energy, climate, and spatial planning.",
-  },
-  {
-    year: "2026",
-    title: "Type Pressure",
-    description:
-      "A typography study exploring rhythm, hierarchy, and legibility under extreme scale, density, and motion constraints across digital interfaces.",
-    category: "Typography Experiments",
-    image: two,
-    imageAlt:
-      "High-contrast typographic compositions testing scale, spacing, and motion.",
-  },
-  {
-    year: "2026",
-    title: "Haul State",
-    description:
-      "A design and systems exploration of electric truck interfaces, focusing on load awareness, range management, and driver decision-making under real-world constraints.",
-    category: "Transportation Systems",
-    image: three,
-    imageAlt:
-      "Electric truck cockpit interface showing load metrics, range estimates, and system status.",
-  },
+  year: "2026",
+  title: "Serres Document Platform",
+  description:
+    "Una plataforma integral de gestión documental orientada a procesos de certificación laboral, validación de contratistas y auditorías empresariales. El sistema centraliza trazabilidad documental, monitoreo de cumplimiento y automatización de flujos operativos para entornos corporativos de alta exigencia.",
+  category: "Sistemas de Gestión Documental",
+  image: one,
+  imageAlt:
+    "Dashboard empresarial mostrando validación documental, monitoreo de cumplimiento y flujos de certificación laboral."
+},
+
+{
+  year: "2026",
+  title: "Estudio Larco Digital Experience",
+  description:
+    "Desarrollo de una experiencia digital contemporánea para un estudio de arquitectura, enfocada en narrativa visual, presentación editorial de proyectos y visualización arquitectónica inmersiva. El sitio integra transiciones cinematográficas, layouts responsivos y una estética minimalista orientada a proyectos de alto estándar.",
+  category: "Arquitectura y Experiencia Digital",
+  image: two,
+  imageAlt:
+    "Sitio web de arquitectura minimalista mostrando proyectos residenciales mediante composiciones editoriales y transiciones visuales."
+},
+
+{
+  year: "2026",
+  title: "Heel Visual Sanitation System",
+  description:
+    "Sistema experimental de sanitización y reconocimiento visual desarrollado para entornos de laboratorio y procesos controlados. La solución integra monitoreo en tiempo real, automatización de protocolos higiénicos y tecnologías de reconocimiento visual para optimizar seguridad y control operacional.",
+  category: "Tecnología para Laboratorios",
+  image: three,
+  imageAlt:
+    "Laboratorio moderno con interfaces de monitoreo sanitario, reconocimiento visual y automatización de protocolos de higiene."
+},
+
+{
+  year: "2026",
+  title: "Producciones19 Interactive Events",
+  description:
+    "Plataforma creativa orientada a experiencias digitales para eventos, integrando desarrollo web, instalaciones interactivas y tecnologías inmersivas para activaciones de marca, espectáculos y producciones en vivo. El proyecto combina motion graphics, interacción en tiempo real y experiencias audiovisuales.",
+  category: "Experiencias Tecnológicas y Eventos",
+  image: one,
+  imageAlt:
+    "Evento interactivo con pantallas inmersivas, visuales digitales y experiencias tecnológicas para público en vivo."
+},
+
+{
+  year: "2026",
+  title: "3D Product Visualization Lab",
+  description:
+    "Iniciativa enfocada en modelado 3D de productos y desarrollo de experiencias web interactivas para visualización digital avanzada. El proyecto conecta diseño industrial, renderizado en tiempo real y tecnologías web modernas para presentación inmersiva de productos y prototipos.",
+  category: "Visualización 3D y Desarrollo Web",
+  image: one,
+  imageAlt:
+    "Visualización 3D de productos en una interfaz web interactiva con renderizado de alta calidad."
+},
+
+{
+  year: "2026",
+  title: "SRT Refrigeración Web Platform",
+  description:
+    "Diseño y desarrollo de una plataforma digital corporativa para servicios de refrigeración industrial, orientada a mostrar soluciones técnicas, infraestructura especializada y capacidades operativas mediante una experiencia web moderna y optimizada.",
+  category: "Sitios Web Corporativos Industriales",
+  image: one,
+  imageAlt:
+    "Sistema industrial de refrigeración presentado mediante una interfaz web corporativa moderna y técnica."
+},
+
+{
+  year: "2026",
+  title: "UX Creative Systems",
+  description:
+    "Proyecto conceptual de diseño UX enfocado en experiencias digitales inmersivas, interacción avanzada y sistemas visuales adaptativos. La propuesta combina narrativa interactiva, motion design y principios de accesibilidad para construir experiencias web emocionales y funcionales.",
+  category: "UX Design y Tecnología Creativa",
+  image: one,
+  imageAlt:
+    "Interfaz experimental con motion graphics, sistemas adaptativos y experiencias digitales inmersivas."
+},
+
+{
+  year: "2026",
+  title: "Typecode Technical Support Network",
+  description:
+    "Framework de apoyo técnico e implementación de sistemas orientado a integración tecnológica, despliegue de plataformas digitales y optimización de flujos operacionales para entornos creativos y corporativos.",
+  category: "Implementación y Soporte Técnico",
+  image: one,
+  imageAlt:
+    "Panel técnico mostrando monitoreo de sistemas, despliegues digitales e integración de infraestructura tecnológica."
+},
 ];
 ---
 

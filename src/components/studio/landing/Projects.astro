@@ -3,36 +3,82 @@ import { Image } from "astro:assets";
 import one from "@/images/projects/one.png";
 import two from "@/images/projects/two.png";
 import three from "@/images/projects/three.png";
+const four = one, five = two, six = three, seven = one, eight = two;
 import Text from "@/components/studio/fundations/elements/Text.astro";
 import Wrapper from "@/components/studio/fundations/containers/Wrapper.astro";
 
 const featuredProjects = [
   {
     year: "2026",
-    title: "Domestic Grid",
+    title: "Serres Document Platform",
     description:
-      "A modular home systems platform mapping energy, climate, and space constraints into actionable layouts, automation rules, and long-term upgrade paths.",
-    category: "Residential Systems Design",
+      "Una plataforma integral de gestión documental orientada a procesos de certificación laboral, validación de contratistas y auditorías empresariales. El sistema centraliza trazabilidad documental, monitoreo de cumplimiento y automatización de flujos operativos para entornos corporativos de alta exigencia.",
+    category: "Sistemas de Gestión Documental",
     image: one,
-    imageAlt: "Modern home interior with overlaid system diagrams.",
+    imageAlt: "Dashboard empresarial mostrando validación documental, monitoreo de cumplimiento y flujos de certificación laboral.",
   },
   {
     year: "2026",
-    title: "Type Pressure",
+    title: "Estudio Larco Digital Experience",
     description:
-      "A typography study exploring rhythm, hierarchy, and legibility under extreme scale, density, and motion constraints across digital interfaces.",
-    category: "Typography Experiments",
+      "Desarrollo de una experiencia digital contemporánea para un estudio de arquitectura, enfocada en narrativa visual, presentación editorial de proyectos y visualización arquitectónica inmersiva. El sitio integra transiciones cinematográficas, layouts responsivos y una estética minimalista orientada a proyectos de alto estándar.",
+    category: "Arquitectura y Experiencia Digital",
     image: two,
-    imageAlt: "High-contrast typographic compositions testing scale and spacing.",
+    imageAlt: "Sitio web de arquitectura minimalista mostrando proyectos residenciales mediante composiciones editoriales y transiciones visuales.",
   },
   {
     year: "2026",
-    title: "Haul State",
+    title: "Heel Visual Sanitation System",
     description:
-      "A design and systems exploration of electric truck interfaces, focusing on load awareness, range management, and driver decision-making.",
-    category: "Transportation Systems",
+      "Sistema experimental de sanitización y reconocimiento visual desarrollado para entornos de laboratorio y procesos controlados. La solución integra monitoreo en tiempo real, automatización de protocolos higiénicos y tecnologías de reconocimiento visual para optimizar seguridad y control operacional.",
+    category: "Tecnología para Laboratorios",
     image: three,
-    imageAlt: "Electric truck cockpit interface showing load metrics.",
+    imageAlt: "Laboratorio moderno con interfaces de monitoreo sanitario, reconocimiento visual y automatización de protocolos de higiene.",
+  },
+  {
+    year: "2026",
+    title: "Producciones19 Interactive Events",
+    description:
+      "Plataforma creativa orientada a experiencias digitales para eventos, integrando desarrollo web, instalaciones interactivas y tecnologías inmersivas para activaciones de marca, espectáculos y producciones en vivo. El proyecto combina motion graphics, interacción en tiempo real y experiencias audiovisuales.",
+    category: "Experiencias Tecnológicas y Eventos",
+    image: four,
+    imageAlt: "Evento interactivo con pantallas inmersivas, visuales digitales y experiencias tecnológicas para público en vivo.",
+  },
+  {
+    year: "2026",
+    title: "3D Product Visualization Lab",
+    description:
+      "Iniciativa enfocada en modelado 3D de productos y desarrollo de experiencias web interactivas para visualización digital avanzada. El proyecto conecta diseño industrial, renderizado en tiempo real y tecnologías web modernas para presentación inmersiva de productos y prototipos.",
+    category: "Visualización 3D y Desarrollo Web",
+    image: five,
+    imageAlt: "Visualización 3D de productos en una interfaz web interactiva con renderizado de alta calidad.",
+  },
+  {
+    year: "2026",
+    title: "SRT Refrigeración Web Platform",
+    description:
+      "Diseño y desarrollo de una plataforma digital corporativa para servicios de refrigeración industrial, orientada a mostrar soluciones técnicas, infraestructura especializada y capacidades operativas mediante una experiencia web moderna y optimizada.",
+    category: "Sitios Web Corporativos Industriales",
+    image: six,
+    imageAlt: "Sistema industrial de refrigeración presentado mediante una interfaz web corporativa moderna y técnica.",
+  },
+  {
+    year: "2026",
+    title: "UX Creative Systems",
+    description:
+      "Proyecto conceptual de diseño UX enfocado en experiencias digitales inmersivas, interacción avanzada y sistemas visuales adaptativos. La propuesta combina narrativa interactiva, motion design y principios de accesibilidad para construir experiencias web emocionales y funcionales.",
+    category: "UX Design y Tecnología Creativa",
+    image: seven,
+    imageAlt: "Interfaz experimental con motion graphics, sistemas adaptativos y experiencias digitales inmersivas.",
+  },
+  {
+    year: "2026",
+    title: "Typecode Technical Support Network",
+    description:
+      "Framework de apoyo técnico e implementación de sistemas orientado a integración tecnológica, despliegue de plataformas digitales y optimización de flujos operacionales para entornos creativos y corporativos.",
+    category: "Implementación y Soporte Técnico",
+    image: eight,
+    imageAlt: "Panel técnico mostrando monitoreo de sistemas, despliegues digitales e integración de infraestructura tecnológica.",
   },
 ];
 ---

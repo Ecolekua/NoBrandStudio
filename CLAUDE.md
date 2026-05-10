@@ -26,7 +26,7 @@ No linter or test runner is configured.
 
 ## Architecture
 
-Tres páginas, dos layouts, design tokens compartidos.
+Seis páginas, dos layouts, design tokens compartidos.
 
 ```
 NoBrandStudio/
@@ -36,11 +36,13 @@ NoBrandStudio/
 ├── CLAUDE.md
 ├── .astro/                       — caché de tipos (no editar)
 ├── public/
-│   ├── img1.jpg … img12.jpg     — imágenes de clientes del homepage
+│   ├── img2.jpg … img13.jpg     — imágenes de clientes del homepage
 │   ├── ScrambleTextPlugin.min.js — plugin UMD cargado vía is:inline (no Rollup)
+│   ├── models/                   — todos los modelos 3D (.glb) unificados aquí
+│   │   ├── monitor.glb, gameboy.glb, vhs.glb, tape.glb, floppy.glb
+│   │   └── (antes estaban en subcarpetas crt/, VHS/, tape/, floppy/)
 │   └── crt/
-│       ├── monitor.glb           — modelo 3D del monitor CRT
-│       └── default.jpg           — textura de referencia
+│       └── default.jpg           — textura de referencia para CRTDisplay
 └── src/
     ├── images/
     │   ├── work/                 — imágenes del studio (one/two/three.png)
@@ -49,11 +51,13 @@ NoBrandStudio/
     │   └── global.css            — ÚNICA fuente de verdad: tokens, base, custom CSS
     ├── layouts/
     │   ├── Layout.astro          — homepage/404: Preloader + PageTransition + Menu, body class="page-home"
-    │   └── StudioLayout.astro    — studio/lab: nav + footer propios de studio
+    │   └── StudioLayout.astro    — studio/projects: nav + footer propios de studio
     ├── pages/
     │   ├── index.astro           — homepage /
     │   ├── studio.astro          — studio /studio (Intro + Work + Projects + Education + Speaking)
-    │   ├── lab.astro             — lab /lab (Intro + Projects + Education + Speaking)
+    │   ├── projects.astro        — projects /projects (Intro + ProjectsSection + Education + Speaking)
+    │   ├── labs.astro            — labs /labs — WebGL sticky image effect (Three.js, shaders, drag)
+    │   ├── contacto.astro        — contacto /contacto — fondo naranja #e85500, screensaver 3D
     │   └── 404.astro             — página de error personalizada con CRT Three.js
     └── components/
         ├── Menu.astro            — nav fija del homepage: logo + scramble + hamburger + OverlayMenu
@@ -74,6 +78,8 @@ NoBrandStudio/
             │           Footer.astro   — footer del studio
             └── landing/Intro.astro, Work.astro, Projects.astro, Education.astro, Speaking.astro
 ```
+
+**IMPORTANTE — conflicto de nombres en `pages/`:** El archivo `projects.astro` importa el componente `Projects.astro` con el alias `ProjectsSection` para evitar conflicto de identificadores TypeScript (`import ProjectsSection from ".../Projects.astro"`). No renombrar este alias.
 
 ## Design tokens — único punto de cambio
 
@@ -171,7 +177,7 @@ Componente Three.js que renderiza un monitor CRT 3D sobre fondo negro.
 
 **Setup:**
 - `camera.position.set(0, 0.15, Math.max(1, 768 / innerWidth))` — se acerca en mobile
-- GLTFLoader carga `/crt/monitor.glb`
+- GLTFLoader carga `/models/monitor.glb` (todos los .glb están en `public/models/`)
 - Pantalla: `ShapeGeometry` con esquinas redondeadas y UVs manuales
 - `displayPlane.position.set(-0.008, 0.005, 0.041)`, `rotation(-0.18, 0, 0)`, `scale(0.28, 0.235, 1)`
 
@@ -182,6 +188,44 @@ Componente Three.js que renderiza un monitor CRT 3D sobre fondo negro.
 **Glitch periódico:** `triggerGlitch()` con `setTimeout(triggerGlitch, 1200 + Math.random() * 3000)`.
 
 **Mouse tracking:** `mouse.x/y` → `gsap.utils.interpolate` → `monitorGroup.rotation.x/y`.
+
+## Contacto — screensaver 3D + color de sistema (`contacto.astro`)
+
+Página standalone. Fondo: `--modal-bg: #e85500` (naranja), aplicado al body.
+
+**Screensaver:** objeto 3D rebotando en `#contact-root`. Lógica en un `wrapper` div posicionado `absolute`. Modelos en `public/models/`: gameboy (scale 0.06), monitor (1), vhs (1), tape (2). En cada rebote cambia al siguiente modelo con `swapModel()`.
+
+**Tamaño:** `CFG.size = isMobile ? 300 : 480`. Bounds: `root.offsetWidth/offsetHeight` (no `getBoundingClientRect()`). Velocidad: `isMobile ? 0.3 : 1.2`.
+
+**Rotación continua:** `targetRY += 0.004` por frame; lerp 0.015 con `gsap.utils.interpolate`.
+
+**Centering correcto:** escalar primero (`model.scale.setScalar(scale)`), luego centrar con `Box3.getCenter()`. Si se centra antes de escalar, el bounding box es incorrecto.
+
+**PageTransition bridge:** color neutro `#ebe9e5` en CSS del `#page-curtain` (no solo en JS) para evitar flash naranja antes de que el JS cargue.
+
+## Labs — WebGL sticky image effect (`labs.astro`)
+
+Página standalone (sin Layout): incluye `PageTransition` y `Menu` directamente.
+
+**Three.js setup:**
+- `PerspectiveCamera(45, aspect, 0.1, 1000)`, `camera.position.z = 5`
+- `PlaneGeometry(pw, ph, 60, 60)` — tamaño calculado via `getViewSize()` / `getPlaneSize()` (plane = 1.5× ancho que alto)
+- `ShaderMaterial` con vertex shader (efecto sticky/wave) y fragment shader (aberración cromática RGB)
+- Texturas: `img2.jpg … img6.jpg` de `public/`
+
+**Interacción drag:**
+- `mousedown/touchstart` → `onDragStart` — activa wave (GSAP: `progress` 0→1, `waveIntensity` 0→0.5)
+- `mousemove/touchmove` → `onDragMove` — actualiza `indexTarget`, llama `setActiveIndex` si cambia
+- `mouseup/touchend` → `onDragEnd` — snap a índice activo, revierte wave (GSAP: `progress` 1→0)
+- Se ignora el drag si el target es `a, button, nav`
+
+**Uniforms clave:** `u_progress`, `u_direction`, `u_waveIntensity`, `u_time`, `u_rgbPosition`, `u_rgbVelocity`, `u_textureProgress`, `u_texture / u_texture2`, `u_textureFactor / u_texture2Factor`
+
+**rAF loop (siempre activo):** lerp del contenedor de slides (`indexCurrent → indexTarget`), lerp del follower RGB, renderizado Three.js continuo.
+
+**Slides overlay:** `.slides-wrap` se mueve con `translateY((indexCurrent * 100) / N %)`. Cada `.slide` = 33vh, centrado con `translateY(-50%)`. Clases: `is-active show-meta`, `is-prev`, `is-next`. Durante drag: `is-dragging` en el wrapper anula opacidades individuales.
+
+**Sustitución de popmotion:** springs reemplazados por GSAP tweens (`ease: "power2.out"`, `"back.out(1.2)"`, etc.).
 
 ## Homepage — animación GSAP (`ClientsSection.astro`)
 
