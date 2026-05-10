@@ -38,7 +38,11 @@ import Menu from "@/components/Menu.astro";
             </div>
 
             <div class="contact-mail" data-anim data-delay="0.65">
-              <a href="mailto:hello@nobrandstudio.com">hello@nobrandstudio.com</a>
+              
+                <a href="mailto:hello@nobrandstudio.com">
+                  <h3>hello@nobrandstudio.com</h3>
+                  </a>
+                
             </div>
 
             <div class="contact-group" data-anim data-delay="0.85">
@@ -48,9 +52,10 @@ import Menu from "@/components/Menu.astro";
             </div>
 
           </div>
+
         </div>
 
-        <footer class="contact-footer" data-anim data-delay="1.05">
+        <footer class="contact-footer" data-anim data-delay="1.35">
           <div class="contact-footer-inner">
             <p class="sm">Disponible para proyectos</p>
             <div class="contact-socials">
@@ -65,16 +70,6 @@ import Menu from "@/components/Menu.astro";
       </section>
     </main>
 
-    <!-- Video trigger — mismo corner que el showreel del index -->
-    <div id="ct-trigger" data-anim data-delay="1.2">
-      <video src="/videos/experimental.mp4" autoplay muted loop playsinline></video>
-    </div>
-
-    <!-- Modal de video -->
-    <div id="ct-modal">
-      <button id="ct-close">✕</button>
-      <video id="ct-video" src="/videos/experimental.mp4" playsinline loop></video>
-    </div>
 
     <script>
       import gsap from "gsap";
@@ -91,7 +86,8 @@ import Menu from "@/components/Menu.astro";
         { path: "/models/vhs.glb",     scale: 1   },
         { path: "/models/tape.glb",    scale: 2 }, // ← ajusta escala aquí
       ];
-      const CFG = { speed: 1.2, size: 300, edgeOffset: -40, changeDelay: 20 };
+      const isMobile = window.innerWidth < 1024;
+      const CFG = { speed: isMobile ? 0.3 : 1.2, size: isMobile ? 300 : 480, edgeOffset: -40, changeDelay: 20 };
 
       const root = document.getElementById("contact-root")!;
       let rId: number | null = null;
@@ -220,11 +216,12 @@ import Menu from "@/components/Menu.astro";
           wrapper!.style.left = `${x}px`;
           wrapper!.style.top  = `${y}px`;
 
-          // Rotación suave hacia el ángulo objetivo
-          lerpedRY = gsap.utils.interpolate(lerpedRY, targetRY, 0.03);
-          lerpedRX = gsap.utils.interpolate(lerpedRX, targetRX, 0.03);
+          // Rotación continua — targetRY avanza constantemente
+          targetRY += 0.004;
+          lerpedRY = gsap.utils.interpolate(lerpedRY, targetRY, 0.015);
+          lerpedRX = gsap.utils.interpolate(lerpedRX, targetRX, 0.015);
           monitorGroup.rotation.y = lerpedRY;
-          monitorGroup.rotation.x = lerpedRX + Math.sin(elapsed * 0.6) * 0.04;
+          monitorGroup.rotation.x = lerpedRX + Math.sin(elapsed * 0.35) * 0.06;
 
           threeRenderer!.render(scene, camera);
           rId = requestAnimationFrame(step);
@@ -246,63 +243,12 @@ import Menu from "@/components/Menu.astro";
         });
       };
 
-      // Si carga dentro del modal (iframe): sin scroll, sin menú y sin trigger propio
+      // Si carga dentro del modal (iframe): sin scroll y sin menú
       if (window !== window.parent) {
         document.body.style.overflow = "hidden";
         document.documentElement.style.overflow = "hidden";
         const nav = document.querySelector("nav");
         if (nav) nav.style.display = "none";
-        const trigger = document.getElementById("ct-trigger");
-        if (trigger) trigger.style.display = "none";
-      } else {
-        // ── Modal de video (solo cuando la página carga standalone) ──────────────
-        const trigger  = document.getElementById("ct-trigger")!;
-        const ctModal  = document.getElementById("ct-modal")!;
-        const ctVideo  = document.getElementById("ct-video") as HTMLVideoElement;
-        const ctClose  = document.getElementById("ct-close")!;
-
-        trigger.addEventListener("click", () => {
-          const rect = trigger.getBoundingClientRect();
-          gsap.set(ctVideo, { opacity: 0 });
-          gsap.set(ctClose, { opacity: 0 });
-          gsap.set(ctModal, {
-            display: "flex",
-            left: rect.left, top: rect.top,
-            width: rect.width, height: rect.height,
-            borderRadius: "0.5rem",
-            pointerEvents: "auto",
-          });
-          gsap.to(ctModal, {
-            left: 0, top: 0,
-            width: "100vw", height: "100vh",
-            borderRadius: 0,
-            duration: 0.75,
-            ease: "expo.inOut",
-            onComplete: () => {
-              ctVideo.play();
-              gsap.to(ctVideo, { opacity: 1, duration: 0.3 });
-              gsap.to(ctClose, { opacity: 1, duration: 0.3, delay: 0.1 });
-            },
-          });
-        });
-
-        ctClose.addEventListener("click", () => {
-          const rect = trigger.getBoundingClientRect();
-          ctVideo.pause();
-          gsap.to([ctVideo, ctClose], { opacity: 0, duration: 0.2 });
-          gsap.to(ctModal, {
-            left: rect.left, top: rect.top,
-            width: rect.width, height: rect.height,
-            borderRadius: "0.5rem",
-            duration: 0.6,
-            delay: 0.15,
-            ease: "expo.inOut",
-            onComplete: () => {
-              gsap.set(ctModal, { display: "none", pointerEvents: "none" });
-              ctVideo.currentTime = 0;
-            },
-          });
-        });
       }
 
       // ── Trigger animations: page-load or direct visit ────────────────────────────
@@ -438,68 +384,11 @@ import Menu from "@/components/Menu.astro";
       /* data-anim elements start hidden — GSAP reveals them */
       [data-anim] { opacity: 0; }
 
-      /* ── Video trigger (mismo estilo que el showreel del index) ─── */
-      :global(#ct-trigger) {
-        position: fixed;
-        bottom: 1.5rem;
-        right: 1.5rem;
-        width: 11vw;
-        min-width: 90px;
-        aspect-ratio: 5 / 3;
-        border-radius: 0.5rem;
-        overflow: hidden;
-        cursor: pointer;
-        z-index: 20;
-      }
-
-      :global(#ct-trigger video) {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        display: block;
-      }
-
-      /* ── Modal de video ─────────────────────────────────────────── */
-      :global(#ct-modal) {
-        position: fixed;
-        display: none;
-        align-items: center;
-        justify-content: center;
-        background: var(--modal-bg);
-        z-index: 200;
-        overflow: hidden;
-      }
-
-      :global(#ct-video) {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        display: block;
-      }
-
-      :global(#ct-close) {
-        position: absolute;
-        top: 1.5rem;
-        right: 1.5rem;
-        background: none;
-        border: none;
-        color: #fff;
-        font-size: 1.5rem;
-        cursor: pointer;
-        z-index: 10;
-        padding: 0.5rem;
-        line-height: 1;
-        opacity: 0;
-        transition: opacity 0.2s;
-      }
-
-      :global(#ct-close:hover) { opacity: 0.6; }
-
       /* ── Mobile ─────────────────────────────────────────────────── */
       @media (max-width: 1023px) {
         #contact-root {
           height: auto;
-          min-height: 150svh;
+          min-height: 100svh;
           padding: 8rem 0 6rem;
           align-items: flex-start;
         }

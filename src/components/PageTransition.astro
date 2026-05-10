@@ -1,11 +1,25 @@
 ---
 ---
 
+<div id="page-curtain"></div>
+
 <script>
   import gsap from "gsap";
   import { SplitText } from "gsap/SplitText";
 
   gsap.registerPlugin(SplitText);
+
+  // Color puente — siempre pasa por este tono entre páginas
+  const BRIDGE = "#ebe9e5";
+
+  const curtain = document.getElementById("page-curtain") as HTMLElement;
+  curtain.style.background = BRIDGE;
+
+  // ── Entrada: telón arranca opaco y se disuelve ───────────────────────────────
+  const revealCurtain = () => {
+    gsap.set(curtain, { opacity: 1, pointerEvents: "none" });
+    gsap.to(curtain, { opacity: 0, duration: 0.6, ease: "power2.inOut" });
+  };
 
   // Los elementos del overlay tienen su propia lógica — se excluyen aquí
   const isOverlay = (el: HTMLElement) => !!el.closest("#overlay-menu");
@@ -18,6 +32,8 @@
 
   // ── Entrada: elementos aparecen con SplitText ────────────────────────────────
   const animateIn = () => {
+    revealCurtain();
+
     document.querySelectorAll<HTMLElement>("[data-split]").forEach((el) => {
       if (isOverlay(el)) return;
       const type = el.dataset.split as "chars" | "words" | "lines";
@@ -69,7 +85,7 @@
     window.addEventListener("preloaderDone", () => gsap.delayedCall(0.2, animateIn), { once: true });
   }
 
-  // ── Salida: elementos visibles desaparecen progresivamente, luego navega ─────
+  // ── Salida: telón cubre la pantalla y luego navega ───────────────────────────
   document.querySelectorAll<HTMLAnchorElement>("a[href]").forEach((link) => {
     const href = link.getAttribute("href") ?? "";
     if (
@@ -78,7 +94,7 @@
       href.startsWith("mailto:") ||
       href.startsWith("tel:") ||
       link.target === "_blank" ||
-      link.closest("#overlay-menu") // el overlay gestiona su propia navegación
+      link.closest("#overlay-menu")
     ) return;
 
     link.addEventListener("click", (e) => {
@@ -86,52 +102,38 @@
       e.preventDefault();
       const dest = link.href;
 
-      const trigger = getShowreelTrigger();
-
+      // Animar texto de salida (sin esperar — el telón lo cubre)
       const els = Array.from(document.querySelectorAll<HTMLElement>("[data-split]")).filter((el) => {
         if (isOverlay(el)) return false;
         const r = el.getBoundingClientRect();
         return r.top < window.innerHeight && r.bottom > 0;
       });
 
-      const hamburger = getHamburger();
-
-      let pending = els.length + (trigger ? 1 : 0) + (hamburger ? 1 : 0);
-      if (pending === 0) { window.location.href = dest; return; }
-      const navigate = () => { if (--pending === 0) window.location.href = dest; };
-
-      if (trigger) {
-        gsap.to(trigger, { opacity: 0, y: 14, duration: 0.3, ease: "power2.in", onComplete: navigate });
-      }
-      if (hamburger) {
-        gsap.to(hamburger, { opacity: 0, y: -8, duration: 0.3, ease: "power2.in", onComplete: navigate });
-      }
-
       els.forEach((el, i) => {
         const type = el.dataset.split as "chars" | "words" | "lines";
         gsap.set(el, { opacity: 1 });
-
         if (type === "chars") {
           const split = new SplitText(el, { type: "words, chars", mask: "chars" });
-          gsap.to(split.chars, {
-            yPercent: -110,
-            stagger: 0.01,
-            duration: 0.4,
-            ease: "power3.in",
-            delay: i * 0.08,
-            onComplete: navigate,
-          });
+          gsap.to(split.chars, { yPercent: -110, stagger: 0.01, duration: 0.4, ease: "power3.in", delay: i * 0.08 });
         } else {
           const split = new SplitText(el, { type: "lines, words", mask: "lines" });
-          gsap.to(split.lines, {
-            yPercent: -110,
-            stagger: 0.03,
-            duration: 0.4,
-            ease: "power3.in",
-            delay: i * 0.08,
-            onComplete: navigate,
-          });
+          gsap.to(split.lines, { yPercent: -110, stagger: 0.03, duration: 0.4, ease: "power3.in", delay: i * 0.08 });
         }
+      });
+
+      const trigger = getShowreelTrigger();
+      if (trigger) gsap.to(trigger, { opacity: 0, y: 14, duration: 0.3, ease: "power2.in" });
+
+      const hamburger = getHamburger();
+      if (hamburger) gsap.to(hamburger, { opacity: 0, y: -8, duration: 0.3, ease: "power2.in" });
+
+      // Telón cubre todo → navega al terminar
+      gsap.to(curtain, {
+        opacity: 1,
+        duration: 0.35,
+        delay: 0.1,
+        ease: "power2.in",
+        onComplete: () => { window.location.href = dest; },
       });
     });
   });
@@ -140,4 +142,13 @@
 <style>
   :global([data-split]) { opacity: 0; }
   :global(#overlay-menu [data-split]) { opacity: 1; }
+
+  :global(#page-curtain) {
+    position: fixed;
+    inset: 0;
+    z-index: 9998;
+    opacity: 1;
+    pointer-events: none;
+    background: #ebe9e5;
+  }
 </style>

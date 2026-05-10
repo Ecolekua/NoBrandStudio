@@ -76,11 +76,12 @@ const imgs = Array.from({ length: 12 }, (_, i) => i + 1);
 
       // Desktop: 2/5 del ancho, márgenes iguales a los del thumbnail (derecha + arriba + abajo)
       // Mobile: pantalla completa sin bordes
+      const desktopW = Math.max(500, window.innerWidth * 0.3 - GAP);
       const target = desktop
         ? {
-            left:         window.innerWidth * 0.7,
+            left:         window.innerWidth - desktopW - GAP,
             top:          window.innerHeight * 0.25 - GAP,
-            width:        window.innerWidth * 0.3 - GAP,
+            width:        desktopW,
             height:       window.innerHeight * 0.75,
             borderRadius: "1.25rem",
           }
