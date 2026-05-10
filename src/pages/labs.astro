@@ -37,10 +37,11 @@ const slides = [
         ))}
       </div>
 
+      <span class="labs-counter" aria-live="polite">
+        <span id="labs-current">01</span> / {String(slides.length).padStart(2, "0")}
+      </span>
+
       <footer class="labs-footer">
-        <span class="labs-counter">
-          <span id="labs-current">01</span> / {String(slides.length).padStart(2, "0")}
-        </span>
         <span class="labs-hint">drag to explore</span>
       </footer>
     </main>
@@ -433,21 +434,31 @@ const slides = [
         transform: translateY(-50%);
       }
 
-      /* ── Footer ────────────────────────────────────────────────────── */
+      /* ── Counter — desktop: bottom-left con blend ───────────────────── */
+      .labs-counter {
+        position: absolute;
+        bottom: 2rem;
+        left: 2.5rem;
+        z-index: 2;
+        pointer-events: none;
+        font-family: var(--font-mono);
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: #fff;
+        mix-blend-mode: difference;
+      }
+
+      /* ── Footer — desktop: hint bottom-right ────────────────────────── */
       .labs-footer {
         position: absolute;
         bottom: 0;
-        left: 0;
-        width: 100%;
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-end;
+        right: 0;
         padding: 2rem 2.5rem;
         z-index: 2;
         pointer-events: none;
       }
 
-      .labs-counter,
       .labs-hint {
         font-family: var(--font-mono);
         font-size: 0.7rem;
@@ -459,10 +470,29 @@ const slides = [
 
       /* ── Mobile ─────────────────────────────────────────────────────── */
       @media (max-width: 768px) {
-        .slides-wrap { left: 6vw; width: 88vw; }
+        .slides-wrap { left: 6vw; width: 76vw; }
         .slide-title { font-size: clamp(2.5rem, 11vw, 4.5rem); }
-        .labs-footer { padding: 1.5rem; }
-        .labs-hint { display: none; }
+
+        /* Counter: a la derecha del título, centrado verticalmente */
+        .labs-counter {
+          bottom: auto;
+          left: auto;
+          right: 6vw;
+          top: 50%;
+          transform: translateY(-50%);
+        }
+
+        /* Footer: hint en bottom-right en naranja */
+        .labs-footer {
+          right: 0;
+          left: auto;
+          padding: 1.5rem 1.5rem;
+        }
+
+        .labs-hint {
+          color: #e85500;
+          mix-blend-mode: normal;
+        }
       }
     </style>
   </body>
