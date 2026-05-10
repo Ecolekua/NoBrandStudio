@@ -74,6 +74,7 @@
     onReverseComplete: () => {
       // Cortina subió → reset y navega si hay destino
       document.body.style.overflow = "";
+      overlayMenu.style.pointerEvents = "none";
       resetWords();
       isAnimating = false;
       if (pendingDest) {
