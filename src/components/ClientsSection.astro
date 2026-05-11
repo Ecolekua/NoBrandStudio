@@ -26,36 +26,101 @@ const clients = [
     <p data-split="chars" style="color: #acacac;">Confían en nosotros</p>
   </div>
 
-  <div
-    class="clients-list relative w-4/5 mb-32 flex flex-wrap justify-start gap-3 mix-blend-difference z-[2]"
-  >
-    {
-      clients.map((client) => (
-        <a
-          href={client.href}
-          target="_blank"
-          rel="noopener noreferrer"
-          data-split="words"
-          data-video={client.video ?? ""}
-          class="client-name"
-        >
-          <h1>{client.name}</h1>
-        </a>
-      ))
-    }
+  <div class="clients-area relative w-4/5 mb-32 z-[2] mix-blend-difference">
+    <!-- Texto intro: aparece primero, luego sale -->
+    <div id="clients-intro" class="pointer-events-none">
+      <p id="clients-intro-p">No son solo pantallas. Construimos productos digitales que la gente entiende, usa y recuerda.</p>
+    </div>
+
+    <!-- Nombres de clientes: entran después del intro -->
+    <div class="clients-list flex flex-wrap justify-start gap-3">
+      {
+        clients.map((client) => (
+          <a
+            href={client.href}
+            target="_blank"
+            rel="noopener noreferrer"
+            data-video={client.video ?? ""}
+            class="client-name"
+          >
+            <h1>{client.name}</h1>
+          </a>
+        ))
+      }
+    </div>
   </div>
 </section>
 
 <script>
   import gsap from "gsap";
+  import { SplitText } from "gsap/SplitText";
   import CustomEase from "gsap/CustomEase";
 
-  gsap.registerPlugin(CustomEase);
+  gsap.registerPlugin(SplitText, CustomEase);
 
   CustomEase.create(
     "hop",
     "M0,0 C0.071,0.505 0.192,0.726 0.318,0.852 0.45,0.984 0.504,1 1,1"
   );
+
+  // ── Secuencia intro → clientes ────────────────────────────────────────────
+  const introEl   = document.getElementById("clients-intro") as HTMLElement;
+  const introP    = document.getElementById("clients-intro-p") as HTMLElement;
+  const clientEls = document.querySelectorAll<HTMLElement>(".client-name");
+
+  // Clientes ocultos al inicio
+  gsap.set(clientEls, { opacity: 0, yPercent: 12 });
+
+  const runIntroSequence = () => {
+    document.fonts.ready.then(() => {
+      const split = new SplitText(introP, {
+        type: "lines, words",
+        mask: "lines",
+      });
+
+      // 1. Texto entra
+      gsap.fromTo(
+        split.lines,
+        { yPercent: 105 },
+        {
+          yPercent: 0,
+          duration: 0.9,
+          stagger: 0.05,
+          ease: "expo.out",
+          onComplete: () => {
+            // 2. Espera 1 seg, luego sale
+            gsap.delayedCall(3, () => {
+              gsap.to(split.lines, {
+                yPercent: -110,
+                duration: 0.55,
+                stagger: 0.03,
+                ease: "power3.in",
+                onComplete: () => {
+                  introEl.style.display = "none";
+                  split.revert();
+                  // 3. Clientes entran
+                  gsap.to(clientEls, {
+                    opacity: 1,
+                    yPercent: 0,
+                    duration: 0.75,
+                    stagger: 0.04,
+                    ease: "expo.out",
+                  });
+                },
+              });
+            });
+          },
+        }
+      );
+    });
+  };
+
+  // Esperar el mismo punto que PageTransition
+  if (sessionStorage.getItem("__preloaderDone")) {
+    gsap.delayedCall(0.35, runIntroSequence);
+  } else {
+    window.addEventListener("preloaderDone", () => gsap.delayedCall(0.5, runIntroSequence), { once: true });
+  }
 
   const clientsPreview = document.getElementById("clients-preview") as HTMLElement;
   const clientNames = document.querySelectorAll<HTMLElement>(".client-name");
@@ -153,3 +218,27 @@ const clients = [
     });
   });
 </script>
+
+<style>
+  .clients-area {
+    min-height: 6rem;
+  }
+
+  #clients-intro {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+  }
+
+  #clients-intro-p {
+    font-family: var(--font-sans) !important;
+    font-size: clamp(1.8rem, 3.5vw, 4.5rem) !important;
+    font-weight: 500 !important;
+    letter-spacing: -0.03em !important;
+    line-height: 1.1 !important;
+    text-transform: none !important;
+    color: #fff !important;
+    margin: 0 !important;
+  }
+</style>
