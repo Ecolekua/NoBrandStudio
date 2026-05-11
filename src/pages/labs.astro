@@ -17,6 +17,11 @@ const slides = [
     <title>Labs — No Brand Studio</title>
   </head>
   <body>
+    <script is:inline>
+      if (!sessionStorage.getItem("__preloaderDone")) {
+        sessionStorage.setItem("__preloaderDone", "1");
+      }
+    </script>
     <PageTransition />
     <Menu />
 
