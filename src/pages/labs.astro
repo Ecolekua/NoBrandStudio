@@ -5,11 +5,9 @@ import PageTransition from "@/components/PageTransition.astro";
 import Menu from "@/components/Menu.astro";
 
 const slides = [
-  { title: "Serres",         meta: "Document Platform · 2026"   },
-  { title: "Estudio Larco",  meta: "Digital Experience · 2026"  },
-  { title: "Heel",           meta: "Visual Sanitation · 2026"   },
-  { title: "Producciones19", meta: "Interactive Events · 2026"  },
-  { title: "3D Visual Lab",  meta: "Visualization · 2026"       },
+  { title: "Experimental",  meta: "Creative Direction · 2026" },
+  { title: "Estudio Larco", meta: "Digital Experience · 2026" },
+  { title: "Serres",        meta: "Document Platform · 2026"  },
 ];
 ---
 
@@ -50,9 +48,13 @@ const slides = [
       import * as THREE from "three";
       import gsap from "gsap";
 
-      // ── Images (public/) ─────────────────────────────────────────────────────
-      const IMAGES = ["/img2.jpg", "/img3.jpg", "/img4.jpg", "/img5.jpg", "/img6.jpg"];
-      const N = IMAGES.length;
+      // ── Videos ───────────────────────────────────────────────────────────────
+      const VIDEO_SRCS = [
+        "/videos/experimental.mp4",
+        "/videos/estudioLarco.mp4",
+        "/videos/serres.mp4",
+      ];
+      const N = VIDEO_SRCS.length;
 
       // ── Vertex shader (sticky wave) ──────────────────────────────────────────
       const vertexShader = `
@@ -136,32 +138,45 @@ const slides = [
         const fov = (camera.fov * Math.PI) / 180;
         return Math.abs(camera.position.z * Math.tan(fov / 2) * 2);
       };
+      // Plane fills the full viewport
       const getPlaneSize = () => {
         const v = getViewSize();
-        return { width: v * 1.5, height: v };
+        return { width: v * (window.innerWidth / window.innerHeight), height: v };
       };
-      const calcFactor = (imgW: number, imgH: number) => {
-        const { width, height } = getPlaneSize();
-        const winRatio  = window.innerWidth / window.innerHeight;
-        const rectRatio = (width / height) * winRatio;
-        const imgRatio  = imgW / imgH;
-        return rectRatio > imgRatio
-          ? new THREE.Vector2(1, (1 / rectRatio) * imgRatio)
-          : new THREE.Vector2(rectRatio / imgRatio, 1);
+      // Cover-fit factor: maps video aspect into the plane UVs
+      const calcFactor = (vidW: number, vidH: number) => {
+        const screenAspect = window.innerWidth / window.innerHeight;
+        const vidAspect    = vidW / vidH;
+        return screenAspect > vidAspect
+          ? new THREE.Vector2(1, vidAspect / screenAspect)
+          : new THREE.Vector2(screenAspect / vidAspect, 1);
       };
 
-      // Textures + factors
-      const factors   = IMAGES.map(() => new THREE.Vector2(1, 1));
-      const textures  = IMAGES.map((src, i) =>
-        new THREE.TextureLoader().load(src, (t: THREE.Texture) => {
-          factors[i] = calcFactor(t.image.width, t.image.height);
+      // ── Video elements + VideoTextures ───────────────────────────────────────
+      const factors: THREE.Vector2[] = VIDEO_SRCS.map(() => new THREE.Vector2(1, 1));
+
+      const videoEls = VIDEO_SRCS.map((src, i) => {
+        const v = document.createElement("video");
+        v.src        = src;
+        v.muted      = true;
+        v.loop       = true;
+        v.playsInline = true;
+        v.setAttribute("playsinline", "");
+        v.preload    = "metadata";
+        v.addEventListener("loadedmetadata", () => {
+          factors[i] = calcFactor(v.videoWidth, v.videoHeight);
           if (i === 0) {
             uniforms.u_textureFactor.value  = factors[0];
             uniforms.u_texture2Factor.value = factors[0];
           }
-          doRender();
-        })
-      );
+        });
+        return v;
+      });
+
+      const textures = videoEls.map(v => new THREE.VideoTexture(v));
+
+      // Start first video
+      videoEls[0].play().catch(() => {});
 
       // Plane geometry + shader material
       const { width: pw, height: ph } = getPlaneSize();
@@ -212,14 +227,21 @@ const slides = [
         counterEl.textContent = String(newIdx + 1).padStart(2, "0");
         updateSlideClasses(newIdx);
 
-        // Texture crossfade
+        // Start incoming video, crossfade texture, then pause outgoing
+        videoEls[newIdx].play().catch(() => {});
         uniforms.u_texture.value         = textures[fromIdx];
         uniforms.u_textureFactor.value   = factors[fromIdx];
         uniforms.u_texture2.value        = textures[newIdx];
         uniforms.u_texture2Factor.value  = factors[newIdx];
         gsap.killTweensOf(uniforms.u_textureProgress);
         uniforms.u_textureProgress.value = 0;
-        gsap.to(uniforms.u_textureProgress, { value: 1, duration: 0.8, ease: "power3.out" });
+        gsap.to(uniforms.u_textureProgress, {
+          value: 1, duration: 0.8, ease: "power3.out",
+          onComplete: () => {
+            videoEls[fromIdx].pause();
+            videoEls[fromIdx].currentTime = 0;
+          },
+        });
       };
 
       // ── Stick physics (GSAP instead of popmotion) ─────────────────────────────
@@ -333,8 +355,13 @@ const slides = [
         camera.updateProjectionMatrix();
         renderer.setSize(window.innerWidth, window.innerHeight);
         uniforms.u_resolution.value.set(window.innerWidth, window.innerHeight);
-        textures.forEach((tex, i) => {
-          if (tex.image) factors[i] = calcFactor(tex.image.width, tex.image.height);
+        // Rebuild geometry for new aspect ratio
+        const { width: rw, height: rh } = getPlaneSize();
+        mesh.geometry.dispose();
+        mesh.geometry = new THREE.PlaneGeometry(rw, rh, 60, 60);
+        // Recalculate cover factors
+        videoEls.forEach((v, i) => {
+          if (v.videoWidth) factors[i] = calcFactor(v.videoWidth, v.videoHeight);
         });
         uniforms.u_textureFactor.value  = factors[activeIndex];
         uniforms.u_texture2Factor.value = factors[activeIndex];
