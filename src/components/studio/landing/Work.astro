@@ -1,8 +1,4 @@
 ---
-import { Image } from "astro:assets";
-import one from "@/images/work/one.png";
-import two from "@/images/work/two.png";
-import three from "@/images/work/three.png";
 import Text from "@/components/studio/fundations/elements/Text.astro";
 import Wrapper from "@/components/studio/fundations/containers/Wrapper.astro";
 import ArrowRight from "@/components/studio/fundations/icons/ArrowRight.astro";
@@ -14,10 +10,7 @@ const featuredProjects = [
     description:
       "En No Brand Studio, entendemos que la creatividad no es solo una habilidad, sino una forma de pensar.Nacimos en Chile a partir de una convicción: diseñar con intención desafiando lo obvio y construyendo experiencias significativas. Somos un estudio multidisciplinario de diseño y tecnología, donde convergen diseño, estrategia y desarrollo para dar vida a productos centrados en la experiencia de usuario. Hoy, colaboramos con clientes y equipos que buscan ir más allá de lo convencional, desarrollando soluciones digitales, identidades y productos que combinan funcionalidad, estética y propósito.",
     category: "",
-    image: one,
-    imageAlt: ".",
   },
- 
 ];
 ---
 
@@ -56,14 +49,13 @@ const featuredProjects = [
               </Text>
               
             </div>
-            <Image
-              data-animate="img"
-              width={1420}
-              height={930}
-              src={project.image}
-              alt={project.imageAlt}
-              loading="lazy"
-              decoding="async"
+            <video
+              data-animate="work-video"
+              src="/videos/experimental1.mp4"
+              autoplay
+              muted
+              loop
+              playsinline
               class="size-full aspect-4/2 mt-12 object-cover object-center"
             />
           </article>
@@ -72,3 +64,22 @@ const featuredProjects = [
     </div>
   </Wrapper>
 </section>
+
+<script>
+  import gsap from "gsap";
+
+  const video = document.querySelector<HTMLElement>('[data-animate="work-video"]');
+  if (video) {
+    gsap.fromTo(
+      video,
+      { yPercent: 12, autoAlpha: 0 },
+      { yPercent: 0, autoAlpha: 1, duration: 1, ease: "power3.out", delay: 0.6 }
+    );
+  }
+</script>
+
+<style>
+  [data-animate="work-video"] {
+    opacity: 0;
+  }
+</style>
