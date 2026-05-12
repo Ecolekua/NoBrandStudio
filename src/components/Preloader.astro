@@ -1,5 +1,26 @@
 ---
-const imgs = Array.from({ length: 12 }, (_, i) => i + 1);
+import one   from "@/images/projects/one.png";
+import two   from "@/images/projects/two.png";
+import three from "@/images/projects/three.png";
+
+type PlMedia =
+  | { type: "img";   src: string }
+  | { type: "video"; src: string };
+
+const media: PlMedia[] = [
+  { type: "img",   src: "/img3.jpg"       },
+  { type: "img",   src: "/img5.jpg"       },
+  { type: "img",   src: "/img7.jpg"       },
+  { type: "img",   src: "/img8.jpg"       },
+  { type: "img",   src: "/img10.jpg"      },
+  { type: "img",   src: one.src           },
+  { type: "img",   src: two.src           },
+  { type: "img",   src: three.src         },
+  { type: "img",   src: "/img3.jpg"       },
+  { type: "img",   src: "/img5.jpg"       },
+  { type: "img",   src: one.src           },
+  { type: "video", src: "/videos/experimental.mp4" },
+];
 ---
 
 <div id="preloader">
@@ -14,11 +35,11 @@ const imgs = Array.from({ length: 12 }, (_, i) => i + 1);
   <p class="pl-credit">No Brand Studio.</p>
 
   <div class="pl-images">
-    {imgs.map((n, i) => (
+    {media.map((m, i) => (
       <div class="pl-img">
-        {i === imgs.length - 1
-          ? <video src="/videos/experimental.mp4" autoplay muted loop playsinline></video>
-          : <img src={`/img${n}.jpg`} alt="" loading="eager" decoding="sync" />
+        {m.type === "video"
+          ? <video src={m.src} autoplay muted loop playsinline></video>
+          : <img src={m.src} alt="" loading="eager" decoding="sync" />
         }
       </div>
     ))}
